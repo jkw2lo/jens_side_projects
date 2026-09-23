@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jen's Side Projects</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ============ GARAGE DOOR INTRO ============ -->
+  <div id="doorOverlay">
+    <div id="garageDoor">
+      <div class="door-panel"></div>
+      <div class="door-panel"></div>
+      <div class="door-panel"></div>
+      <div class="door-panel"></div>
+      <div class="door-handle"></div>
+      <div class="door-content">
+        <h1 class="door-title">JEN'S SIDE PROJECTS</h1>
+        <p class="door-hint">click anywhere to open</p>
+      </div>
+    </div>
+    <div id="doorTrackShadow"></div>
+  </div>
+
+  <!-- ============ GARAGE INTERIOR / APP ============ -->
+  <div id="garageScene" aria-hidden="true">
+    <div class="garage-bg">
+      <div class="garage-wall"></div>
+      <div class="garage-floor"></div>
+      <div class="pegboard"></div>
+      <div class="door-track-marks"></div>
+    </div>
+
+    <header class="top-bar">
+      <div class="brand">Jen's Side Projects</div>
+      <div class="top-buttons">
+        <a id="resumeBtn" class="pill-btn" href="#" target="_blank" rel="noopener">Resume</a>
+        <div class="email-wrap">
+          <button id="emailBtn" class="pill-btn" type="button">Email</button>
+          <div id="emailPopover" class="email-popover hidden">
+            <span id="emailAddress"></span>
+            <div class="email-popover-actions">
+              <button id="copyEmailBtn" type="button">Copy</button>
+              <a id="mailtoLink" href="#">Send email</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="main-layout">
+      <aside class="sidebar" aria-label="Project list">
+        <section class="featured-section">
+          <h2 class="sidebar-heading">Featured</h2>
+          <div id="featuredList" class="box-stack featured-stack"></div>
+        </section>
+        <section class="all-projects-section">
+          <h2 class="sidebar-heading">All Projects</h2>
+          <div id="projectList" class="box-stack rolodex"></div>
+        </section>
+      </aside>
+
+      <main id="detailPanel" class="detail-panel"></main>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
