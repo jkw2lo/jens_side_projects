@@ -33,9 +33,22 @@ const Store = (function () {
     }
   }
 
+  // Fill in any fields added to SITE_CONFIG after this browser last saved,
+  // so older localStorage data doesn't crash the theme/branding code.
+  function migrate(s) {
+    if (!s.siteConfig.brandText) s.siteConfig.brandText = SITE_CONFIG.brandText;
+    if (!s.siteConfig.theme) s.siteConfig.theme = JSON.parse(JSON.stringify(SITE_CONFIG.theme));
+    if (!s.siteConfig.theme.colors) s.siteConfig.theme.colors = JSON.parse(JSON.stringify(SITE_CONFIG.theme.colors));
+    Object.keys(SITE_CONFIG.theme.colors).forEach((key) => {
+      if (!s.siteConfig.theme.colors[key]) s.siteConfig.theme.colors[key] = SITE_CONFIG.theme.colors[key];
+    });
+    if (!s.siteConfig.theme.fontKey) s.siteConfig.theme.fontKey = SITE_CONFIG.theme.fontKey;
+    return s;
+  }
+
   let saved = loadSaved();
   let hasLocalEdits = !!saved;
-  let state = saved || cloneDefaults();
+  let state = migrate(saved || cloneDefaults());
 
   function notify() {
     listeners.forEach((fn) => fn(state));
@@ -98,6 +111,21 @@ const Store = (function () {
 
     updateAboutMe(patch) {
       Object.assign(state.aboutMe, patch);
+      persist();
+    },
+
+    updateTheme(patch) {
+      Object.assign(state.siteConfig.theme, patch);
+      persist();
+    },
+
+    updateThemeColor(key, value) {
+      state.siteConfig.theme.colors[key] = value;
+      persist();
+    },
+
+    resetTheme() {
+      state.siteConfig.theme = JSON.parse(JSON.stringify(SITE_CONFIG.theme));
       persist();
     },
 

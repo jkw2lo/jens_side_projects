@@ -3,10 +3,24 @@
    Nothing else in the site needs to change when you update your content.
    ========================================================================== */
 
-// Shown in the top-right corner and used by the "Resume" / "Email" buttons.
+// Shown in the header/door, top-right corner, and used to theme the page.
 const SITE_CONFIG = {
+  brandText: "Jen's Side Projects", // shown top-left and on the garage door
   resumeUrl: "assets/resume/resume.pdf", // drop your resume PDF at this path
   contactEmail: "jennifer.kw.lo.ny@gmail.com",
+  theme: {
+    fontKey: "system", // one of FONT_OPTIONS in js/theme.js
+    backgroundImage: "", // data URL or path; empty = default CSS garage
+    colors: {
+      accent: "#f4b942",
+      door: "#a7aab0",
+      wall: "#55585e",
+      floor: "#34363a",
+      box: "#90949c",
+      featuredBox: "#9a9e6d",
+      panel: "#e6e4dc",
+    },
+  },
 };
 
 // Shown in the center panel when no project is selected.

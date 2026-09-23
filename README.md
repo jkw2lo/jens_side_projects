@@ -14,9 +14,12 @@ in-page editor:
   the left column.
 - Click a project to edit its title, tagline, link, purpose, audience, key
   features, images, and personal note through forms in the center panel.
-- Edit the welcome heading/intro/about-me text and your resume URL / contact
-  email from the welcome screen.
 - Upload images straight from your computer, or add an image by path/URL.
+- From the welcome screen: edit the welcome heading/intro/about-me text, the
+  header text shown top-left and on the garage door, your resume (upload a
+  file or link to one) and contact email, and appearance — font, an accent
+  color plus colors for the door/wall/floor/boxes/panel, and an optional
+  custom background image to replace the CSS garage.
 
 Changes autosave to that browser's local storage as you go — nothing is
 published yet, it's just visible to you, in that browser, until you publish
@@ -29,9 +32,10 @@ it:
 4. Optionally click **Reset local edits** afterward so this browser goes
    back to showing the published version instead of your local draft.
 
-If uploaded images make the exported file huge, drop the actual image files
-into `assets/images/` instead, commit them, and point each project's image
-at that path (e.g. `assets/images/recipe-1.png`) rather than an uploaded one.
+If uploaded images (or a custom background/resume) make the exported file
+huge, drop the actual files into `assets/` instead, commit them, and point
+the relevant field at that path (e.g. `assets/images/recipe-1.png`) rather
+than an uploaded one.
 
 ## Editing your content directly (alternative)
 

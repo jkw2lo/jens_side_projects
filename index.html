@@ -17,7 +17,7 @@
       <div class="door-panel"></div>
       <div class="door-handle"></div>
       <div class="door-content">
-        <h1 class="door-title">JEN'S SIDE PROJECTS</h1>
+        <h1 class="door-title" id="doorTitleText">JEN'S SIDE PROJECTS</h1>
         <p class="door-hint">click anywhere to open</p>
       </div>
     </div>
@@ -26,7 +26,7 @@
 
   <!-- ============ GARAGE INTERIOR / APP ============ -->
   <div id="garageScene" aria-hidden="true">
-    <div class="garage-bg">
+    <div class="garage-bg" id="garageBg">
       <div class="garage-wall"></div>
       <div class="garage-floor"></div>
       <div class="pegboard"></div>
@@ -34,17 +34,22 @@
     </div>
 
     <header class="top-bar">
-      <div class="brand">Jen's Side Projects</div>
+      <div class="brand" id="brandText">Jen's Side Projects</div>
       <div class="top-buttons">
         <a id="resumeBtn" class="pill-btn" href="#" target="_blank" rel="noopener">Resume</a>
         <div class="email-wrap">
           <button id="emailBtn" class="pill-btn" type="button">Email</button>
           <div id="emailPopover" class="email-popover hidden">
-            <span id="emailAddress"></span>
-            <div class="email-popover-actions">
-              <button id="copyEmailBtn" type="button">Copy</button>
-              <a id="mailtoLink" href="#">Send email</a>
+            <div class="email-row">
+              <span id="emailAddress"></span>
+              <button id="copyEmailBtn" class="icon-btn" type="button" title="Copy email" aria-label="Copy email">
+                <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="6.5" y="6.5" width="10" height="11" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+                  <path d="M4 12.5V4.5A1.5 1.5 0 0 1 5.5 3H12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+              </button>
             </div>
+            <a id="mailtoLink" class="mailto-link" href="#">Send email &rarr;</a>
           </div>
         </div>
         <button id="editModeBtn" class="pill-btn pill-btn-ghost" type="button" title="Edit this site's content">
@@ -81,6 +86,7 @@
   </div>
 
   <script src="js/data.js"></script>
+  <script src="js/theme.js"></script>
   <script src="js/store.js"></script>
   <script src="js/app.js"></script>
 </body>

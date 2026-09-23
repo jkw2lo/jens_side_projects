@@ -120,10 +120,12 @@
     box.innerHTML =
       (project.featured ? '<span class="featured-badge">Featured</span>' : "") +
       overlay +
+      '<div class="box-inner">' +
       '<div class="box-lid"></div>' +
       '<div class="box-label">' +
       '<span class="box-title"></span>' +
       '<span class="box-tagline"></span>' +
+      "</div>" +
       "</div>";
     box.querySelector(".box-title").textContent = project.name;
     box.querySelector(".box-tagline").textContent = project.tagline || "";
@@ -290,13 +292,137 @@
     return wrap;
   }
 
+  function selectField(label, value, options, onChange) {
+    const wrap = document.createElement("label");
+    wrap.className = "field";
+    const span = document.createElement("span");
+    span.className = "field-label";
+    span.textContent = label;
+    const select = document.createElement("select");
+    options.forEach((opt) => {
+      const o = document.createElement("option");
+      o.value = opt.key;
+      o.textContent = opt.label;
+      if (opt.key === value) o.selected = true;
+      select.appendChild(o);
+    });
+    select.addEventListener("change", () => liveUpdate(() => onChange(select.value)));
+    wrap.appendChild(span);
+    wrap.appendChild(select);
+    return wrap;
+  }
+
+  function colorField(label, value, onChange) {
+    const wrap = document.createElement("label");
+    wrap.className = "field color-field";
+    const span = document.createElement("span");
+    span.className = "field-label";
+    span.textContent = label;
+    const input = document.createElement("input");
+    input.type = "color";
+    input.value = value;
+    input.addEventListener("input", () => liveUpdate(() => onChange(input.value)));
+    wrap.appendChild(span);
+    wrap.appendChild(input);
+    return wrap;
+  }
+
+  function fileRow(label, dataUrl, accept, onUpload, onRemove) {
+    const wrap = document.createElement("div");
+    wrap.className = "field";
+    const span = document.createElement("span");
+    span.className = "field-label";
+    span.textContent = label;
+    wrap.appendChild(span);
+
+    if (accept.indexOf("image") === 0 && dataUrl) {
+      const preview = document.createElement("div");
+      preview.className = "bg-preview";
+      const img = document.createElement("img");
+      img.src = dataUrl;
+      img.alt = "";
+      const rm = document.createElement("button");
+      rm.type = "button";
+      rm.className = "row-remove-btn";
+      rm.textContent = "×";
+      rm.addEventListener("click", () => {
+        onRemove();
+        renderDetail();
+      });
+      preview.appendChild(img);
+      preview.appendChild(rm);
+      wrap.appendChild(preview);
+    } else if (dataUrl && dataUrl.indexOf("data:") === 0) {
+      const approxKb = Math.round((dataUrl.length * 3) / 4 / 1024);
+      const chip = document.createElement("div");
+      chip.className = "file-chip";
+      const text = document.createElement("span");
+      text.textContent = "Uploaded file (~" + approxKb + " KB)";
+      const rm = document.createElement("button");
+      rm.type = "button";
+      rm.className = "row-remove-btn";
+      rm.textContent = "×";
+      rm.addEventListener("click", () => {
+        onRemove();
+        renderDetail();
+      });
+      chip.appendChild(text);
+      chip.appendChild(rm);
+      wrap.appendChild(chip);
+    }
+
+    const isUploaded = dataUrl && dataUrl.indexOf("data:") === 0;
+    const uploadLabel = document.createElement("label");
+    uploadLabel.className = "upload-label";
+    uploadLabel.textContent = isUploaded ? "Replace file" : "Upload a file";
+    const uploadInput = document.createElement("input");
+    uploadInput.type = "file";
+    uploadInput.accept = accept;
+    uploadInput.addEventListener("change", () => {
+      const file = uploadInput.files && uploadInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        onUpload(reader.result);
+        renderDetail();
+      };
+      reader.readAsDataURL(file);
+    });
+    uploadLabel.appendChild(uploadInput);
+    wrap.appendChild(uploadLabel);
+
+    return wrap;
+  }
+
+  const COLOR_FIELDS = [
+    ["accent", "Accent / buttons"],
+    ["door", "Garage door"],
+    ["wall", "Wall"],
+    ["floor", "Floor"],
+    ["box", "Project boxes"],
+    ["featuredBox", "Featured boxes"],
+    ["panel", "Detail panel"],
+  ];
+
   function renderWelcomeForm() {
     const about = Store.getAboutMe();
     const config = Store.getSiteConfig();
+    const theme = config.theme;
 
     detailPanel.innerHTML = "";
     const wrap = document.createElement("div");
     wrap.className = "welcome edit-form";
+
+    const hHeader = document.createElement("h2");
+    hHeader.className = "form-section-title";
+    hHeader.textContent = "Header";
+    wrap.appendChild(hHeader);
+    wrap.appendChild(textField("Header / door title", config.brandText, (v) => Store.updateSiteConfig({ brandText: v })));
+    const headerHint = document.createElement("p");
+    headerHint.className = "field-hint";
+    headerHint.style.marginBottom = "16px";
+    headerHint.textContent = "Shown top-left on every page, and on the garage door in the intro.";
+    wrap.appendChild(headerHint);
 
     const h = document.createElement("h2");
     h.className = "form-section-title";
@@ -310,11 +436,61 @@
 
     const h2 = document.createElement("h2");
     h2.className = "form-section-title";
-    h2.textContent = "Site settings";
+    h2.textContent = "Resume & contact";
     wrap.appendChild(h2);
 
-    wrap.appendChild(textField("Resume URL", config.resumeUrl, (v) => Store.updateSiteConfig({ resumeUrl: v })));
+    wrap.appendChild(
+      fileRow(
+        "Resume",
+        config.resumeUrl,
+        ".pdf,.doc,.docx",
+        (dataUrl) => Store.updateSiteConfig({ resumeUrl: dataUrl }),
+        () => Store.updateSiteConfig({ resumeUrl: "" })
+      )
+    );
+    if (!config.resumeUrl || config.resumeUrl.indexOf("data:") !== 0) {
+      wrap.appendChild(textField("...or a path/URL", config.resumeUrl, (v) => Store.updateSiteConfig({ resumeUrl: v }), { placeholder: "assets/resume/resume.pdf" }));
+    }
     wrap.appendChild(textField("Contact email", config.contactEmail, (v) => Store.updateSiteConfig({ contactEmail: v })));
+
+    const h3 = document.createElement("h2");
+    h3.className = "form-section-title";
+    h3.textContent = "Appearance";
+    wrap.appendChild(h3);
+
+    wrap.appendChild(selectField("Font", theme.fontKey, FONT_OPTIONS, (v) => Store.updateTheme({ fontKey: v })));
+
+    const colorGrid = document.createElement("div");
+    colorGrid.className = "color-grid";
+    COLOR_FIELDS.forEach(([key, label]) => {
+      colorGrid.appendChild(colorField(label, theme.colors[key], (v) => Store.updateThemeColor(key, v)));
+    });
+    wrap.appendChild(colorGrid);
+
+    wrap.appendChild(
+      fileRow(
+        "Custom background image",
+        theme.backgroundImage,
+        "image/*",
+        (dataUrl) => Store.updateTheme({ backgroundImage: dataUrl }),
+        () => Store.updateTheme({ backgroundImage: "" })
+      )
+    );
+    const bgHint = document.createElement("p");
+    bgHint.className = "field-hint";
+    bgHint.style.marginBottom = "16px";
+    bgHint.textContent = "Replaces the CSS garage background with your own photo or illustration.";
+    wrap.appendChild(bgHint);
+
+    const resetAppearanceBtn = document.createElement("button");
+    resetAppearanceBtn.type = "button";
+    resetAppearanceBtn.className = "add-row-btn";
+    resetAppearanceBtn.textContent = "Reset appearance to default";
+    resetAppearanceBtn.addEventListener("click", () => {
+      Store.resetTheme();
+      renderDetail();
+    });
+    wrap.appendChild(resetAppearanceBtn);
 
     detailPanel.appendChild(wrap);
   }
@@ -512,19 +688,30 @@
     else renderProjectView(project);
   }
 
-  /* ---------------- top bar ---------------- */
+  /* ---------------- top bar / branding / theme ---------------- */
   const resumeBtn = document.getElementById("resumeBtn");
   const emailBtn = document.getElementById("emailBtn");
   const emailPopover = document.getElementById("emailPopover");
   const emailAddress = document.getElementById("emailAddress");
   const copyEmailBtn = document.getElementById("copyEmailBtn");
   const mailtoLink = document.getElementById("mailtoLink");
+  const brandTextEl = document.getElementById("brandText");
+  const doorTitleEl = document.getElementById("doorTitleText");
 
-  function refreshTopBar() {
+  const copyIcon = copyEmailBtn.innerHTML;
+  const checkIcon =
+    '<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+    "</svg>";
+
+  function refreshChrome() {
     const config = Store.getSiteConfig();
     resumeBtn.href = config.resumeUrl;
     emailAddress.textContent = config.contactEmail;
     mailtoLink.href = "mailto:" + config.contactEmail;
+    brandTextEl.textContent = config.brandText || "Jen's Side Projects";
+    if (doorTitleEl) doorTitleEl.textContent = config.brandText || "Jen's Side Projects";
+    applyTheme(config.theme);
   }
 
   emailBtn.addEventListener("click", (e) => {
@@ -539,10 +726,14 @@
   copyEmailBtn.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(Store.getSiteConfig().contactEmail);
-      copyEmailBtn.textContent = "Copied!";
-      window.setTimeout(() => (copyEmailBtn.textContent = "Copy"), 1500);
+      copyEmailBtn.innerHTML = checkIcon;
+      copyEmailBtn.classList.add("copied");
+      window.setTimeout(() => {
+        copyEmailBtn.innerHTML = copyIcon;
+        copyEmailBtn.classList.remove("copied");
+      }, 1500);
     } catch (err) {
-      copyEmailBtn.textContent = "Select & copy";
+      showToast("Couldn't copy — select the address manually.");
     }
   });
 
@@ -595,7 +786,7 @@
       activeProjectId = null;
       renderSidebar();
       renderDetail();
-      refreshTopBar();
+      refreshChrome();
       updateEditUI();
     });
   });
@@ -603,13 +794,13 @@
   /* ---------------- store subscription + initial render ---------------- */
   Store.subscribe(() => {
     renderSidebar();
-    refreshTopBar();
+    refreshChrome();
     updateEditUI();
     if (!suppressDetailRerender) renderDetail();
   });
 
   renderSidebar();
   renderDetail();
-  refreshTopBar();
+  refreshChrome();
   updateEditUI();
 })();
