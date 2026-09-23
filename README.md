@@ -1,9 +1,10 @@
 # Jen's Side Projects
 
-A single-page portfolio site: a garage door intro that rolls up into a garage
-where each project is shown as a banker box in a left-hand menu, with details
-in a center panel. Plain HTML/CSS/JS — no build step, so it deploys straight
-to GitHub Pages.
+A single-page portfolio site: a garage door intro rolls up into a garage
+where each project is shown as a banker box in a left-hand menu. Project
+details open as a panel that overlays the welcome content — click a project
+to open it, click it again to close and return to the background. Plain
+HTML/CSS/JS — no build step, so it deploys straight to GitHub Pages.
 
 ## Editing your content: Edit Mode (recommended)
 
@@ -13,13 +14,14 @@ in-page editor:
 - Add, delete, reorder, and star projects as "Featured" (max 3) right from
   the left column.
 - Click a project to edit its title, tagline, link, purpose, audience, key
-  features, images, and personal note through forms in the center panel.
+  features, images, and personal note through forms in the overlay panel.
 - Upload images straight from your computer, or add an image by path/URL.
 - From the welcome screen: edit the welcome heading/intro/about-me text, the
   header text shown top-left and on the garage door, your resume (upload a
-  file or link to one) and contact email, and appearance — font, an accent
-  color plus colors for the door/wall/floor/boxes/panel, and an optional
-  custom background image to replace the CSS garage.
+  file or link to one) and contact email, and appearance — site font, 7
+  colors (accent/door/wall/floor/boxes/featured boxes/panel), a separate
+  font+size+angle+color just for the big door title (handwriting, spray
+  paint, poster styles, etc.), and an optional custom background image.
 
 Changes autosave to that browser's local storage as you go — nothing is
 published yet, it's just visible to you, in that browser, until you publish

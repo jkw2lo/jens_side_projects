@@ -20,6 +20,14 @@ const SITE_CONFIG = {
       featuredBox: "#9a9e6d",
       panel: "#e6e4dc",
     },
+    // Styling for the big door title specifically (not the small top-bar
+    // brand text) — one of HEADLINE_FONT_OPTIONS in js/theme.js.
+    headline: {
+      fontKey: "bebas",
+      size: 4, // rem
+      rotate: 0, // degrees
+      color: "#24262a",
+    },
   },
 };
 

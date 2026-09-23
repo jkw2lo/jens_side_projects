@@ -12,13 +12,16 @@
     doorOpened = true;
     garageDoor.classList.add("opening");
     garageScene.removeAttribute("aria-hidden");
-    garageDoor.addEventListener(
-      "transitionend",
-      () => {
-        doorOverlay.style.display = "none";
-      },
-      { once: true }
-    );
+    // #garageDoor also hosts the content-fade and shine-sweep animations
+    // (the latter via ::after, which bubbles animationend to this element
+    // too), so filter to the door's own roll-up animation specifically —
+    // otherwise the shortest of the three would hide the overlay early.
+    function onDoorAnimEnd(e) {
+      if (e.animationName !== "doorRollUp") return;
+      doorOverlay.style.display = "none";
+      garageDoor.removeEventListener("animationend", onDoorAnimEnd);
+    }
+    garageDoor.addEventListener("animationend", onDoorAnimEnd);
   }
 
   doorOverlay.addEventListener("click", openDoor);
@@ -30,7 +33,8 @@
   /* ---------------- shared state ---------------- */
   const featuredListEl = document.getElementById("featuredList");
   const projectListEl = document.getElementById("projectList");
-  const detailPanel = document.getElementById("detailPanel");
+  const welcomeLayer = document.getElementById("welcomeLayer");
+  const projectOverlay = document.getElementById("projectOverlay");
 
   let activeProjectId = null;
   let currentSlide = 0;
@@ -118,7 +122,6 @@
     }
 
     box.innerHTML =
-      (project.featured ? '<span class="featured-badge">Featured</span>' : "") +
       overlay +
       '<div class="box-inner">' +
       '<div class="box-lid"></div>' +
@@ -185,17 +188,22 @@
   }
 
   function selectProject(id) {
-    activeProjectId = id;
-    currentSlide = 0;
+    if (id === activeProjectId) {
+      // clicking the open project again closes it, back to the background
+      activeProjectId = null;
+    } else {
+      activeProjectId = id;
+      currentSlide = 0;
+    }
     renderSidebar();
     renderDetail();
-    detailPanel.scrollTop = 0;
+    projectOverlay.scrollTop = 0;
   }
 
   /* ---------------- detail panel: read-only views ---------------- */
   function renderWelcomeView() {
     const about = Store.getAboutMe();
-    detailPanel.innerHTML =
+    welcomeLayer.innerHTML =
       '<div class="welcome">' +
       "<h1>" + escapeHtml(about.heading) + "</h1>" +
       '<p class="intro">' + escapeHtml(about.intro) + "</p>" +
@@ -232,7 +240,7 @@
   function renderProjectView(project) {
     const features = (project.features || []).map((f) => "<li>" + escapeHtml(f) + "</li>").join("");
 
-    detailPanel.innerHTML =
+    projectOverlay.innerHTML =
       '<div class="project-detail">' +
       '<div class="project-header">' +
       "<h1>" + escapeHtml(project.name) + "</h1>" +
@@ -251,8 +259,8 @@
       "</div>" +
       "</div>";
 
-    const prevBtn = detailPanel.querySelector(".slide-nav.prev");
-    const nextBtn = detailPanel.querySelector(".slide-nav.next");
+    const prevBtn = projectOverlay.querySelector(".slide-nav.prev");
+    const nextBtn = projectOverlay.querySelector(".slide-nav.next");
     if (prevBtn) {
       prevBtn.addEventListener("click", () => {
         currentSlide = (currentSlide - 1 + project.images.length) % project.images.length;
@@ -265,7 +273,7 @@
         renderDetail();
       });
     }
-    detailPanel.querySelectorAll(".slide-dots .dot").forEach((dot) => {
+    projectOverlay.querySelectorAll(".slide-dots .dot").forEach((dot) => {
       dot.addEventListener("click", () => {
         currentSlide = Number(dot.dataset.index);
         renderDetail();
@@ -324,6 +332,35 @@
     input.addEventListener("input", () => liveUpdate(() => onChange(input.value)));
     wrap.appendChild(span);
     wrap.appendChild(input);
+    return wrap;
+  }
+
+  function rangeField(label, value, min, max, step, suffix, onChange) {
+    const wrap = document.createElement("div");
+    wrap.className = "field";
+    const span = document.createElement("span");
+    span.className = "field-label";
+    span.textContent = label;
+    wrap.appendChild(span);
+
+    const row = document.createElement("div");
+    row.className = "range-row";
+    const input = document.createElement("input");
+    input.type = "range";
+    input.min = min;
+    input.max = max;
+    input.step = step;
+    input.value = value;
+    const valueLabel = document.createElement("span");
+    valueLabel.className = "range-value";
+    valueLabel.textContent = value + suffix;
+    input.addEventListener("input", () => {
+      valueLabel.textContent = input.value + suffix;
+      liveUpdate(() => onChange(Number(input.value)));
+    });
+    row.appendChild(input);
+    row.appendChild(valueLabel);
+    wrap.appendChild(row);
     return wrap;
   }
 
@@ -409,7 +446,7 @@
     const config = Store.getSiteConfig();
     const theme = config.theme;
 
-    detailPanel.innerHTML = "";
+    welcomeLayer.innerHTML = "";
     const wrap = document.createElement("div");
     wrap.className = "welcome edit-form";
 
@@ -467,6 +504,22 @@
     });
     wrap.appendChild(colorGrid);
 
+    const hHeadline = document.createElement("h2");
+    hHeadline.className = "form-section-title";
+    hHeadline.textContent = "Door title style";
+    wrap.appendChild(hHeadline);
+    const headlineHint = document.createElement("p");
+    headlineHint.className = "field-hint";
+    headlineHint.style.marginBottom = "12px";
+    headlineHint.textContent = "The big text on the garage door — pick from handwriting, spray-paint, poster, and more.";
+    wrap.appendChild(headlineHint);
+
+    const headline = theme.headline || {};
+    wrap.appendChild(selectField("Door title font", headline.fontKey, HEADLINE_FONT_OPTIONS, (v) => Store.updateHeadline({ fontKey: v })));
+    wrap.appendChild(rangeField("Size", headline.size || 4, 1.5, 9, 0.25, "rem", (v) => Store.updateHeadline({ size: v })));
+    wrap.appendChild(rangeField("Angle", headline.rotate || 0, -20, 20, 1, "°", (v) => Store.updateHeadline({ rotate: v })));
+    wrap.appendChild(colorField("Door title color", headline.color || "#24262a", (v) => Store.updateHeadline({ color: v })));
+
     wrap.appendChild(
       fileRow(
         "Custom background image",
@@ -492,11 +545,11 @@
     });
     wrap.appendChild(resetAppearanceBtn);
 
-    detailPanel.appendChild(wrap);
+    welcomeLayer.appendChild(wrap);
   }
 
   function renderProjectForm(project) {
-    detailPanel.innerHTML = "";
+    projectOverlay.innerHTML = "";
     const wrap = document.createElement("div");
     wrap.className = "project-detail edit-form";
 
@@ -673,19 +726,24 @@
     personalWrap.appendChild(textField("", project.personal, (v) => Store.updateProject(project.id, { personal: v }), { textarea: true, rows: 3 }));
     wrap.appendChild(personalWrap);
 
-    detailPanel.appendChild(wrap);
+    projectOverlay.appendChild(wrap);
   }
 
   /* ---------------- detail dispatch ---------------- */
   function renderDetail() {
+    // the welcome layer is the permanent background layer — always kept
+    // current, whether or not a project overlay is showing on top of it
+    if (editMode) renderWelcomeForm();
+    else renderWelcomeView();
+
     const project = activeProjectId ? Store.getProject(activeProjectId) : null;
-    if (!project) {
-      if (editMode) renderWelcomeForm();
-      else renderWelcomeView();
-      return;
+    if (project) {
+      if (editMode) renderProjectForm(project);
+      else renderProjectView(project);
+      projectOverlay.classList.add("open");
+    } else {
+      projectOverlay.classList.remove("open");
     }
-    if (editMode) renderProjectForm(project);
-    else renderProjectView(project);
   }
 
   /* ---------------- top bar / branding / theme ---------------- */

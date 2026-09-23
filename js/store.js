@@ -43,6 +43,7 @@ const Store = (function () {
       if (!s.siteConfig.theme.colors[key]) s.siteConfig.theme.colors[key] = SITE_CONFIG.theme.colors[key];
     });
     if (!s.siteConfig.theme.fontKey) s.siteConfig.theme.fontKey = SITE_CONFIG.theme.fontKey;
+    if (!s.siteConfig.theme.headline) s.siteConfig.theme.headline = JSON.parse(JSON.stringify(SITE_CONFIG.theme.headline));
     return s;
   }
 
@@ -121,6 +122,11 @@ const Store = (function () {
 
     updateThemeColor(key, value) {
       state.siteConfig.theme.colors[key] = value;
+      persist();
+    },
+
+    updateHeadline(patch) {
+      Object.assign(state.siteConfig.theme.headline, patch);
       persist();
     },
 
