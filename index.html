@@ -47,8 +47,22 @@
             </div>
           </div>
         </div>
+        <button id="editModeBtn" class="pill-btn pill-btn-ghost" type="button" title="Edit this site's content">
+          <span id="editModeIcon">✎</span> <span id="editModeLabel">Edit</span>
+        </button>
       </div>
     </header>
+
+    <div id="editToolbar" class="edit-toolbar hidden">
+      <span class="edit-toolbar-text">
+        Edit mode — changes autosave to this browser only.
+        <span id="localEditsBadge" class="local-edits-badge hidden">● unpublished local edits</span>
+      </span>
+      <div class="edit-toolbar-actions">
+        <button id="exportBtn" type="button">Export data.js</button>
+        <button id="resetBtn" type="button" class="danger">Reset local edits</button>
+      </div>
+    </div>
 
     <div class="main-layout">
       <aside class="sidebar" aria-label="Project list">
@@ -67,6 +81,7 @@
   </div>
 
   <script src="js/data.js"></script>
+  <script src="js/store.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

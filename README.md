@@ -5,26 +5,40 @@ where each project is shown as a banker box in a left-hand menu, with details
 in a center panel. Plain HTML/CSS/JS — no build step, so it deploys straight
 to GitHub Pages.
 
-## Editing your content
+## Editing your content: Edit Mode (recommended)
 
-Everything you'll want to change day-to-day lives in **[`js/data.js`](js/data.js)**:
+Click **Edit** in the top-right corner of the live site. This turns on an
+in-page editor:
 
-- `SITE_CONFIG` — your resume file path and contact email.
-- `ABOUT_ME` — the heading/intro/bio shown when no project is selected.
-- `PROJECTS` — one object per project (see the comments at the top of the
-  file for what each field does). Set `featured: true` on up to 3 projects
-  to pin them above the scrollable list.
+- Add, delete, reorder, and star projects as "Featured" (max 3) right from
+  the left column.
+- Click a project to edit its title, tagline, link, purpose, audience, key
+  features, images, and personal note through forms in the center panel.
+- Edit the welcome heading/intro/about-me text and your resume URL / contact
+  email from the welcome screen.
+- Upload images straight from your computer, or add an image by path/URL.
 
-### Adding images
+Changes autosave to that browser's local storage as you go — nothing is
+published yet, it's just visible to you, in that browser, until you publish
+it:
 
-Drop screenshots into `assets/images/` and reference them in a project's
-`images` array, e.g. `images: ["assets/images/recipe-1.png", "assets/images/recipe-2.png"]`.
-Until you add images, the slideshow shows a placeholder automatically.
+1. Click **Export data.js** in the edit toolbar. This downloads a `data.js`
+   file with everything you've edited.
+2. Replace [`js/data.js`](js/data.js) in this repo with the downloaded file.
+3. Commit and push. GitHub Pages picks it up automatically.
+4. Optionally click **Reset local edits** afterward so this browser goes
+   back to showing the published version instead of your local draft.
 
-### Adding your resume
+If uploaded images make the exported file huge, drop the actual image files
+into `assets/images/` instead, commit them, and point each project's image
+at that path (e.g. `assets/images/recipe-1.png`) rather than an uploaded one.
 
-Put a PDF at `assets/resume/resume.pdf` (or change `SITE_CONFIG.resumeUrl`
-in `js/data.js` to point wherever you'd rather host it).
+## Editing your content directly (alternative)
+
+You can also hand-edit **[`js/data.js`](js/data.js)** instead of using Edit
+Mode — it defines `SITE_CONFIG`, `ABOUT_ME`, and `PROJECTS` with comments
+explaining each field. This is what Edit Mode reads as its starting point
+whenever a browser has no local edits saved.
 
 ## Running it locally
 
