@@ -48,6 +48,41 @@ const HEADLINE_FONT_OPTIONS = [
   },
 ];
 
+// Combined, deduped catalogue used by the per-text-block font picker, so
+// any block (not just the door title) can use the full variety.
+const TEXT_FONT_OPTIONS = (function () {
+  const seen = new Set();
+  const out = [];
+  FONT_OPTIONS.concat(HEADLINE_FONT_OPTIONS).forEach((f) => {
+    if (seen.has(f.key)) return;
+    seen.add(f.key);
+    out.push(f);
+  });
+  return out;
+})();
+
+let fontPreviewsLoaded = false;
+// Loads every catalogued Google Font at once (as a single request) so font
+// pickers can render each option in its own real typeface immediately,
+// instead of the menu popping/reflowing font-by-font as each loads.
+function ensureFontPreviewsLoaded() {
+  if (fontPreviewsLoaded) return;
+  fontPreviewsLoaded = true;
+  const seen = new Set();
+  const parts = [];
+  TEXT_FONT_OPTIONS.forEach((f) => {
+    if (f.googleFont && !seen.has(f.googleFont)) {
+      seen.add(f.googleFont);
+      parts.push("family=" + f.googleFont);
+    }
+  });
+  if (!parts.length) return;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = "https://fonts.googleapis.com/css2?" + parts.join("&") + "&display=swap";
+  document.head.appendChild(link);
+}
+
 function loadGoogleFont(linkId, googleFont) {
   let link = document.getElementById(linkId);
   if (googleFont) {

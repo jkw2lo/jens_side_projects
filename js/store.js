@@ -45,6 +45,10 @@ const Store = (function () {
     if (!s.siteConfig.theme.fontKey) s.siteConfig.theme.fontKey = SITE_CONFIG.theme.fontKey;
     if (!s.siteConfig.theme.headline) s.siteConfig.theme.headline = JSON.parse(JSON.stringify(SITE_CONFIG.theme.headline));
     if (!s.siteConfig.theme.contentPosition) s.siteConfig.theme.contentPosition = JSON.parse(JSON.stringify(SITE_CONFIG.theme.contentPosition));
+    if (!s.aboutMe.styles) s.aboutMe.styles = {};
+    s.projects.forEach((p) => {
+      if (!p.styles) p.styles = {};
+    });
     return s;
   }
 
@@ -116,6 +120,25 @@ const Store = (function () {
       persist();
     },
 
+    // Per-field rich-text formatting overrides (font/size/weight/italic/
+    // align/color). Any field left null/unset falls back to the site
+    // default — this is how "default unless the user overrides it" works.
+    updateAboutMeStyle(field, patch) {
+      if (!state.aboutMe.styles) state.aboutMe.styles = {};
+      if (!state.aboutMe.styles[field]) state.aboutMe.styles[field] = {};
+      Object.assign(state.aboutMe.styles[field], patch);
+      persist();
+    },
+
+    updateProjectStyle(id, field, patch) {
+      const p = state.projects.find((p) => p.id === id);
+      if (!p) return;
+      if (!p.styles) p.styles = {};
+      if (!p.styles[field]) p.styles[field] = {};
+      Object.assign(p.styles[field], patch);
+      persist();
+    },
+
     updateTheme(patch) {
       Object.assign(state.siteConfig.theme, patch);
       persist();
@@ -160,6 +183,7 @@ const Store = (function () {
         audience: "",
         features: [],
         personal: "",
+        styles: {},
       };
       state.projects.push(project);
       persist();

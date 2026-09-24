@@ -49,6 +49,9 @@ const ABOUT_ME = {
   navHint:
     "Featured projects are pinned at the top of the left column. Everything " +
     "else lives in the scrollable stack below it — click any box to open it.",
+  // Per-field font/size/weight/italic/align/color overrides, set from the
+  // format toolbar in Edit Mode. Leave empty to use the site default font.
+  styles: {},
 };
 
 /*

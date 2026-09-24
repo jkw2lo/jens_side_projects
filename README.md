@@ -8,22 +8,31 @@ HTML/CSS/JS — no build step, so it deploys straight to GitHub Pages.
 
 ## Editing your content: Edit Mode (recommended)
 
-Click **Edit** in the top-right corner of the live site. This turns on an
-in-page editor:
+Click **Edit** in the top-right corner of the live site. Editing happens
+directly on the page — there's no separate form to fill out:
 
-- Add, delete, reorder, and star projects as "Featured" (max 3) right from
-  the left column.
-- Click a project to edit its title, tagline, link, purpose, audience, key
-  features, images, and personal note through forms in the overlay panel.
-- Upload images straight from your computer, or add an image by path/URL.
-- From the welcome screen: edit the welcome heading/intro/about-me text, the
-  header text shown top-left and on the garage door, your resume (upload a
-  file or link to one) and contact email, and appearance — site font, 7
-  colors (accent/door/wall/floor/boxes/featured boxes/panel), a separate
-  font+size+angle+color just for the big door title (handwriting, spray
-  paint, poster styles, etc.), where the welcome text sits (left/center/right,
-  top/center/bottom — handy for balancing it against a custom background
-  photo), and an optional custom background image.
+- **Click any text** (the welcome heading/intro/about-me, a project's name,
+  purpose, audience, features, personal note...) and type. A floating
+  toolbar appears above it with a font picker that previews every option in
+  its own real typeface, a size stepper, bold/italic, alignment, and a
+  color swatch with an opacity slider — set any of these to override that
+  one block, or leave it on "Default font" to inherit the site font. Click
+  elsewhere to dismiss the toolbar; **Reset** in the toolbar clears a
+  block's overrides back to the default.
+- Images: click **+ Add** in a project's thumbnail strip to upload, or drop
+  an image path/URL into the field below it. Reorder or remove with the
+  arrows/× on each thumbnail.
+- Features: click **+ Add feature**, type directly into the list, hover a
+  feature to reveal its × to remove it.
+- A project's link: click **Visit project** in edit mode to edit the URL in
+  a small popover instead of navigating away.
+- Add, delete, reorder, and star projects as "Featured" (max 3) from the
+  left column.
+- Site-wide settings live in the **🎨 Design** panel (top toolbar): header
+  text, resume, contact email, the default site font, 7 colors (each with
+  its own opacity slider), where the welcome text sits over the background
+  (a visual 3x3 grid), the door title's own font/size/angle/color, and an
+  optional custom background image.
 
 Changes autosave to that browser's local storage as you go — nothing is
 published yet, it's just visible to you, in that browser, until you publish
@@ -46,7 +55,10 @@ than an uploaded one.
 You can also hand-edit **[`js/data.js`](js/data.js)** instead of using Edit
 Mode — it defines `SITE_CONFIG`, `ABOUT_ME`, and `PROJECTS` with comments
 explaining each field. This is what Edit Mode reads as its starting point
-whenever a browser has no local edits saved.
+whenever a browser has no local edits saved. Each text field's formatting
+override (if any) lives in a sibling `styles` object, e.g.
+`ABOUT_ME.styles.heading` or `project.styles.purpose` — leave a field out
+of `styles` (or leave `styles: {}`) to use the site default.
 
 ## Running it locally
 

@@ -62,10 +62,11 @@
 
     <div id="editToolbar" class="edit-toolbar hidden">
       <span class="edit-toolbar-text">
-        Edit mode — changes autosave to this browser only.
+        Edit mode — click any text to edit it in place. Changes autosave to this browser only.
         <span id="localEditsBadge" class="local-edits-badge hidden">● unpublished local edits</span>
       </span>
       <div class="edit-toolbar-actions">
+        <button id="designBtn" type="button">🎨 Design</button>
         <button id="exportBtn" type="button">Export data.js</button>
         <button id="resetBtn" type="button" class="danger">Reset local edits</button>
       </div>
@@ -90,8 +91,18 @@
     </div>
   </div>
 
+  <div id="designPanelScrim" class="design-panel-scrim hidden"></div>
+  <div id="designPanel" class="design-panel hidden" aria-hidden="true">
+    <div class="design-panel-header">
+      <h2>Design</h2>
+      <button id="closeDesignPanel" type="button" class="icon-btn" aria-label="Close design panel">×</button>
+    </div>
+    <div id="designPanelContent" class="design-panel-content"></div>
+  </div>
+
   <script src="js/data.js"></script>
   <script src="js/theme.js"></script>
+  <script src="js/ui.js"></script>
   <script src="js/store.js"></script>
   <script src="js/app.js"></script>
 </body>
