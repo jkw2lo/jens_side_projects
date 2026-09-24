@@ -100,6 +100,10 @@ const ABOUT_ME = {
       background: null,
     },
   ],
+  // Draggable alignment guides for the canvas, as percentages (0-100).
+  // A permanent center guide is always shown in Edit Mode too — these are
+  // just the extra ones you've added.
+  guides: { v: [], h: [] },
 };
 
 /*

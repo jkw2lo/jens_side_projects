@@ -451,6 +451,105 @@
     return Math.max(min, Math.min(max, n));
   }
 
+  /* ---- alignment guides: a fixed center + draggable custom lines, with
+     blocks snapping to any of them while dragging/resizing ---- */
+  const GUIDE_SNAP_THRESHOLD = 1.4; // percentage points
+
+  function getSnapTargets(axis) {
+    const guides = Store.getGuides();
+    return [50].concat(axis === "v" ? guides.v : guides.h);
+  }
+
+  function snapValue(value, targets, threshold) {
+    let result = value;
+    let snappedTo = null;
+    let bestDist = threshold;
+    targets.forEach((t) => {
+      const d = Math.abs(value - t);
+      if (d < bestDist) {
+        bestDist = d;
+        result = t;
+        snappedTo = t;
+      }
+    });
+    return { value: result, snappedTo };
+  }
+
+  function highlightGuides(vValue, hValue) {
+    welcomeCanvas.querySelectorAll(".canvas-guide.vertical").forEach((g) => {
+      g.classList.toggle("snapped", vValue !== null && Math.abs(Number(g.dataset.value) - vValue) < 0.01);
+    });
+    welcomeCanvas.querySelectorAll(".canvas-guide.horizontal").forEach((g) => {
+      g.classList.toggle("snapped", hValue !== null && Math.abs(Number(g.dataset.value) - hValue) < 0.01);
+    });
+  }
+
+  function makeGuideDraggable(lineEl, axis, index) {
+    lineEl.addEventListener("mousedown", (e) => {
+      if (e.target.closest(".guide-remove-btn")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const canvasRect = welcomeCanvas.getBoundingClientRect();
+      let finalValue = Number(lineEl.dataset.value);
+      function onMove(ev) {
+        const pct =
+          axis === "v"
+            ? ((ev.clientX - canvasRect.left) / canvasRect.width) * 100
+            : ((ev.clientY - canvasRect.top) / canvasRect.height) * 100;
+        finalValue = clampPct(Math.round(pct * 10) / 10, 0, 100);
+        lineEl.dataset.value = finalValue;
+        if (axis === "v") lineEl.style.left = finalValue + "%";
+        else lineEl.style.top = finalValue + "%";
+      }
+      function onUp() {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        Store.updateGuide(axis, index, finalValue);
+      }
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    });
+  }
+
+  function makeGuideLine(axis, value, index) {
+    const g = document.createElement("div");
+    g.className = "canvas-guide " + (axis === "v" ? "vertical" : "horizontal") + " custom";
+    g.dataset.value = value;
+    if (axis === "v") g.style.left = value + "%";
+    else g.style.top = value + "%";
+    const rm = document.createElement("button");
+    rm.type = "button";
+    rm.className = "guide-remove-btn";
+    rm.textContent = "×";
+    rm.title = "Remove guide";
+    rm.addEventListener("click", (e) => {
+      e.stopPropagation();
+      Store.removeGuide(axis, index);
+      renderDetail();
+    });
+    g.appendChild(rm);
+    makeGuideDraggable(g, axis, index);
+    return g;
+  }
+
+  function renderCanvasGuides() {
+    const vCenter = document.createElement("div");
+    vCenter.className = "canvas-guide vertical fixed";
+    vCenter.dataset.value = "50";
+    vCenter.style.left = "50%";
+    welcomeCanvas.appendChild(vCenter);
+
+    const hCenter = document.createElement("div");
+    hCenter.className = "canvas-guide horizontal fixed";
+    hCenter.dataset.value = "50";
+    hCenter.style.top = "50%";
+    welcomeCanvas.appendChild(hCenter);
+
+    const guides = Store.getGuides();
+    guides.v.forEach((value, index) => welcomeCanvas.appendChild(makeGuideLine("v", value, index)));
+    guides.h.forEach((value, index) => welcomeCanvas.appendChild(makeGuideLine("h", value, index)));
+  }
+
   function deselectCanvasBlock() {
     if (!selectedCanvasBlockId) return;
     const el = welcomeCanvas.querySelector('[data-block-id="' + selectedCanvasBlockId + '"]');
@@ -482,14 +581,36 @@
       function onMove(ev) {
         const dxPct = ((ev.clientX - startClientX) / canvasRect.width) * 100;
         const dyPct = ((ev.clientY - startClientY) / canvasRect.height) * 100;
-        finalX = clampPct(startX + dxPct, 0, 100 - block.width);
-        finalY = clampPct(startY + dyPct, 0, 95);
-        blockEl.style.left = finalX + "%";
-        blockEl.style.top = finalY + "%";
+        let x = clampPct(startX + dxPct, 0, 100 - block.width);
+        let y = clampPct(startY + dyPct, 0, 95);
+
+        const vTargets = getSnapTargets("v");
+        const hTargets = getSnapTargets("h");
+        const leftSnap = snapValue(x, vTargets, GUIDE_SNAP_THRESHOLD);
+        let snappedV = leftSnap.snappedTo;
+        if (snappedV !== null) {
+          x = leftSnap.value;
+        } else {
+          const centerSnap = snapValue(x + block.width / 2, vTargets, GUIDE_SNAP_THRESHOLD);
+          if (centerSnap.snappedTo !== null) {
+            x = centerSnap.value - block.width / 2;
+            snappedV = centerSnap.snappedTo;
+          }
+        }
+        const topSnap = snapValue(y, hTargets, GUIDE_SNAP_THRESHOLD);
+        const snappedH = topSnap.snappedTo;
+        if (snappedH !== null) y = topSnap.value;
+
+        finalX = x;
+        finalY = y;
+        blockEl.style.left = x + "%";
+        blockEl.style.top = y + "%";
+        highlightGuides(snappedV, snappedH);
       }
       function onUp() {
         document.removeEventListener("mousemove", onMove);
         document.removeEventListener("mouseup", onUp);
+        highlightGuides(null, null);
         block.x = finalX;
         block.y = finalY;
         Store.updateAboutMeBlock(block.id, { x: finalX, y: finalY });
@@ -513,17 +634,29 @@
       let finalHeight = startHeight;
       function onMove(ev) {
         const dxPct = ((ev.clientX - startClientX) / canvasRect.width) * 100;
-        finalWidth = clampPct(startWidth + dxPct, 6, 100 - block.x);
-        blockEl.style.width = finalWidth + "%";
+        let width = clampPct(startWidth + dxPct, 6, 100 - block.x);
+        const rightSnap = snapValue(block.x + width, getSnapTargets("v"), GUIDE_SNAP_THRESHOLD);
+        const snappedV = rightSnap.snappedTo;
+        if (snappedV !== null) width = rightSnap.value - block.x;
+        blockEl.style.width = width + "%";
+        finalWidth = width;
+
+        let snappedH = null;
         if (resizeHeight) {
           const dyPct = ((ev.clientY - startClientY) / canvasRect.height) * 100;
-          finalHeight = clampPct(startHeight + dyPct, 4, 100 - block.y);
-          blockEl.style.height = finalHeight + "%";
+          let height = clampPct(startHeight + dyPct, 4, 100 - block.y);
+          const bottomSnap = snapValue(block.y + height, getSnapTargets("h"), GUIDE_SNAP_THRESHOLD);
+          snappedH = bottomSnap.snappedTo;
+          if (snappedH !== null) height = bottomSnap.value - block.y;
+          blockEl.style.height = height + "%";
+          finalHeight = height;
         }
+        highlightGuides(snappedV, snappedH);
       }
       function onUp() {
         document.removeEventListener("mousemove", onMove);
         document.removeEventListener("mouseup", onUp);
+        highlightGuides(null, null);
         block.width = finalWidth;
         const patch = { width: finalWidth };
         if (resizeHeight) {
@@ -628,43 +761,7 @@
     Store.getAboutMeBlocks().forEach((block) => {
       welcomeCanvas.appendChild(renderCanvasBlock(block));
     });
-
-    if (editMode) {
-      const addBar = document.createElement("div");
-      addBar.className = "canvas-add-bar";
-      [
-        ["text", "+ Text"],
-        ["image", "+ Image"],
-        ["container", "+ Box"],
-      ].forEach(([type, label]) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.textContent = label;
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const id = Store.addAboutMeBlock(type);
-          renderDetail();
-          const newEl = welcomeCanvas.querySelector('[data-block-id="' + id + '"]');
-          const newBlock = Store.getAboutMeBlocks().find((b) => b.id === id);
-          if (newEl && newBlock) {
-            selectCanvasBlock(newBlock, newEl);
-            if (type === "text") {
-              const textEl = newEl.querySelector(".block-text");
-              if (textEl) {
-                textEl.focus();
-                const range = document.createRange();
-                range.selectNodeContents(textEl);
-                const sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-              }
-            }
-          }
-        });
-        addBar.appendChild(btn);
-      });
-      welcomeCanvas.appendChild(addBar);
-    }
+    if (editMode) renderCanvasGuides();
   }
 
   // Click empty canvas space to deselect — attached once, not per-render,
@@ -673,6 +770,44 @@
     if (e.target !== welcomeCanvas) return;
     deselectCanvasBlock();
     if (panelMode === "block") closeDesignPanel();
+  });
+
+  // "+ Text / + Image / + Box / + V Guide / + H Guide" live in the fixed
+  // bottom-right dock (index.html), not inside the canvas itself, so they
+  // stay put regardless of scroll — wired once here, not per-render.
+  const canvasAddBarEl = document.getElementById("canvasAddBar");
+  canvasAddBarEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-add]");
+    if (!btn) return;
+    const type = btn.dataset.add;
+    if (type === "v-guide") {
+      Store.addGuide("v");
+      renderDetail();
+      return;
+    }
+    if (type === "h-guide") {
+      Store.addGuide("h");
+      renderDetail();
+      return;
+    }
+    const id = Store.addAboutMeBlock(type);
+    renderDetail();
+    const newEl = welcomeCanvas.querySelector('[data-block-id="' + id + '"]');
+    const newBlock = Store.getAboutMeBlocks().find((b) => b.id === id);
+    if (newEl && newBlock) {
+      selectCanvasBlock(newBlock, newEl);
+      if (type === "text") {
+        const textEl = newEl.querySelector(".block-text");
+        if (textEl) {
+          textEl.focus();
+          const range = document.createRange();
+          range.selectNodeContents(textEl);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      }
+    }
   });
 
   /* ---------------- project overlay ---------------- */
@@ -1020,6 +1155,9 @@
       projectOverlay.classList.remove("open");
     }
     hideFormatToolbar();
+    // the canvas add-bar only makes sense while looking at the welcome
+    // canvas itself, not while a project overlay is open on top of it
+    canvasAddBarEl.classList.toggle("hidden", !editMode || !!project);
   }
 
   /* ---------------- top bar / branding / theme ---------------- */
@@ -1029,7 +1167,6 @@
   const emailAddress = document.getElementById("emailAddress");
   const copyEmailBtn = document.getElementById("copyEmailBtn");
   const mailtoLink = document.getElementById("mailtoLink");
-  const brandTextEl = document.getElementById("brandText");
   const doorTitleEl = document.getElementById("doorTitleText");
 
   const copyIcon = copyEmailBtn.innerHTML;
@@ -1043,7 +1180,6 @@
     resumeBtn.href = config.resumeUrl;
     emailAddress.textContent = config.contactEmail;
     mailtoLink.href = "mailto:" + config.contactEmail;
-    brandTextEl.textContent = config.brandText || "Jen's Side Projects";
     if (doorTitleEl) doorTitleEl.textContent = config.brandText || "Jen's Side Projects";
     applyTheme(config.theme);
   }
@@ -1592,7 +1728,7 @@
   /* ---------------- edit mode toggle + toolbar ---------------- */
   const editModeBtn = document.getElementById("editModeBtn");
   const editModeLabel = document.getElementById("editModeLabel");
-  const editToolbar = document.getElementById("editToolbar");
+  const editDock = document.getElementById("editDock");
   const localEditsBadge = document.getElementById("localEditsBadge");
   const exportBtn = document.getElementById("exportBtn");
   const resetBtn = document.getElementById("resetBtn");
@@ -1600,7 +1736,7 @@
   function updateEditUI() {
     editModeBtn.classList.toggle("active", editMode);
     editModeLabel.textContent = editMode ? "Editing" : "Edit";
-    editToolbar.classList.toggle("hidden", !editMode);
+    editDock.classList.toggle("hidden", !editMode);
     localEditsBadge.classList.toggle("hidden", !Store.hasLocalEdits());
   }
 

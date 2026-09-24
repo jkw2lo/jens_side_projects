@@ -67,6 +67,7 @@ const Store = (function () {
     if (!s.aboutMe.blocks) {
       s.aboutMe.blocks = s.aboutMe.heading !== undefined ? synthesizeBlocksFromLegacy(s.aboutMe) : JSON.parse(JSON.stringify(ABOUT_ME.blocks));
     }
+    if (!s.aboutMe.guides) s.aboutMe.guides = { v: [], h: [] };
     s.projects.forEach((p) => {
       if (!p.styles) p.styles = {};
     });
@@ -192,6 +193,25 @@ const Store = (function () {
       if (idx < 0) return;
       const [b] = arr.splice(idx, 1);
       arr.unshift(b);
+      persist();
+    },
+
+    // ---- draggable alignment guides (axis: "v" | "h") ----
+    getGuides: () => state.aboutMe.guides,
+    addGuide(axis) {
+      state.aboutMe.guides[axis].push(50);
+      persist();
+    },
+    updateGuide(axis, index, value) {
+      const arr = state.aboutMe.guides[axis];
+      if (!arr || index < 0 || index >= arr.length) return;
+      arr[index] = value;
+      persist();
+    },
+    removeGuide(axis, index) {
+      const arr = state.aboutMe.guides[axis];
+      if (!arr || index < 0 || index >= arr.length) return;
+      arr.splice(index, 1);
       persist();
     },
 

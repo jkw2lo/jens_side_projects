@@ -8,13 +8,15 @@ HTML/CSS/JS — no build step, so it deploys straight to GitHub Pages.
 
 ## Editing your content: Edit Mode (recommended)
 
-Click **Edit** in the top-right corner of the live site. Editing happens
-directly on the page — there's no separate form to fill out:
+Click **Edit** in the top-right corner of the live site. All the edit
+controls live in a dock in the **bottom-right corner** — the "+ Text /
++ Image / + Box" buttons above the "Edit mode" info card — so the canvas
+itself stays clear while you work:
 
 - **The welcome area (when no project is selected) is a free-form canvas —
   like a single slide.** Drag any block by its ✥ handle, resize it from its
   corner handle, and layer blocks with "Bring to front"/"Send to back".
-  Click **+ Text**, **+ Image**, or **+ Box** (top-left of the canvas) to
+  Click **+ Text**, **+ Image**, or **+ Box** in the bottom-right dock to
   add a new block anywhere. Click a block to select it — a **Block** panel
   opens with exact X/Y/Width/Height percentages (for precise placement, not
   just eyeballed dragging), its own background color + opacity, and for
@@ -22,6 +24,11 @@ directly on the page — there's no separate form to fill out:
   other blocks. Delete a block from the same panel. Nothing here is fixed
   chrome — the shipped heading/intro/about/nav-hint are just the starting
   blocks, fully movable, resizable, restylable, or deletable.
+- **Alignment guides**: a faint fixed center guide (both axes) is always
+  there for quick eyeballing. Click **+ V Guide** / **+ H Guide** to drop a
+  draggable line anywhere — drag it into position, and blocks will snap to
+  it (edge or center) while you drag or resize them near it. Hover a custom
+  guide to reveal its × and remove it.
 - **Click any project text** (name, purpose, audience, features, personal
   note) and type. A floating toolbar appears above it with a font picker
   that previews every option in its own real typeface, a size stepper,
@@ -68,7 +75,8 @@ explaining each field. This is what Edit Mode reads as its starting point
 whenever a browser has no local edits saved. `ABOUT_ME.blocks` is the
 welcome canvas — each entry has its own `type` (`text`/`image`/`container`),
 `x`/`y`/`width`/`height` percentages, and (for text) a `style` override.
-Each project's text field formatting override (if any) lives in a sibling
+`ABOUT_ME.guides` holds your custom alignment guides as `{ v: [...], h: [...] }`
+percentage arrays. Each project's text field formatting override (if any) lives in a sibling
 `styles` object, e.g. `project.styles.purpose` — leave a field out of
 `styles` (or leave `styles: {}`) to use the site default.
 
