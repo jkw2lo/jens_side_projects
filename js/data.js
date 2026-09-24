@@ -6,7 +6,7 @@
 // Shown in the header/door, top-right corner, and used to theme the page.
 const SITE_CONFIG = {
   brandText: "Jen's Side Projects", // shown top-left and on the garage door
-  resumeUrl: "assets/resume/resume.pdf", // drop your resume PDF at this path
+  resumeUrl: "assets/resume/Resume%20-%20Jennifer%20Lo%2020260901.pdf",
   contactEmail: "jennifer.kw.lo.ny@gmail.com",
   theme: {
     fontKey: "system", // one of FONT_OPTIONS in js/theme.js
