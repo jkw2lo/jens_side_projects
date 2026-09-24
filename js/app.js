@@ -31,6 +31,7 @@
   const featuredListEl = document.getElementById("featuredList");
   const projectListEl = document.getElementById("projectList");
   const welcomeLayer = document.getElementById("welcomeLayer");
+  const welcomeCanvas = document.getElementById("welcomeCanvas");
   const projectOverlay = document.getElementById("projectOverlay");
 
   let activeProjectId = null;
@@ -439,67 +440,240 @@
     projectOverlay.scrollTop = 0;
   }
 
-  /* ---------------- welcome layer (always the background content) ---------------- */
-  function renderWelcomeView() {
-    const about = Store.getAboutMe();
-    const styles = about.styles || {};
-    welcomeLayer.innerHTML = "";
-    const wrap = document.createElement("div");
-    wrap.className = "welcome";
+  /* ==========================================================================
+     WELCOME CANVAS: the "no project selected" area is a free-form slide —
+     every block (text/image/container) has its own x/y/width/height (as a
+     % of the canvas) and can be dragged, resized, and restyled independently.
+     ========================================================================== */
+  let selectedCanvasBlockId = null;
 
-    wrap.appendChild(
-      createRichText({
-        tag: "h1",
-        value: about.heading,
-        style: styles.heading || {},
-        placeholder: "Welcome heading",
-        onInput: (v) => Store.updateAboutMe({ heading: v }),
-        onStyle: (patch) => Store.updateAboutMeStyle("heading", patch),
-      })
-    );
-    wrap.appendChild(
-      createRichText({
-        tag: "p",
-        className: "intro",
-        value: about.intro,
-        style: styles.intro || {},
-        placeholder: "A short intro for visitors...",
-        onInput: (v) => Store.updateAboutMe({ intro: v }),
-        onStyle: (patch) => Store.updateAboutMeStyle("intro", patch),
-      })
-    );
-
-    const aboutBox = document.createElement("div");
-    aboutBox.className = "about-box";
-    const aboutH3 = document.createElement("h3");
-    aboutH3.textContent = "About me";
-    aboutBox.appendChild(aboutH3);
-    aboutBox.appendChild(
-      createRichText({
-        tag: "p",
-        value: about.about,
-        style: styles.about || {},
-        placeholder: "A short bio — who you are, what you like building...",
-        onInput: (v) => Store.updateAboutMe({ about: v }),
-        onStyle: (patch) => Store.updateAboutMeStyle("about", patch),
-      })
-    );
-    wrap.appendChild(aboutBox);
-
-    wrap.appendChild(
-      createRichText({
-        tag: "p",
-        className: "nav-hint",
-        value: about.navHint,
-        style: styles.navHint || {},
-        placeholder: "A hint about how to navigate the site...",
-        onInput: (v) => Store.updateAboutMe({ navHint: v }),
-        onStyle: (patch) => Store.updateAboutMeStyle("navHint", patch),
-      })
-    );
-
-    welcomeLayer.appendChild(wrap);
+  function clampPct(n, min, max) {
+    return Math.max(min, Math.min(max, n));
   }
+
+  function deselectCanvasBlock() {
+    if (!selectedCanvasBlockId) return;
+    const el = welcomeCanvas.querySelector('[data-block-id="' + selectedCanvasBlockId + '"]');
+    if (el) el.classList.remove("selected");
+    selectedCanvasBlockId = null;
+  }
+
+  function selectCanvasBlock(block, el) {
+    if (selectedCanvasBlockId && selectedCanvasBlockId !== block.id) {
+      const prev = welcomeCanvas.querySelector('[data-block-id="' + selectedCanvasBlockId + '"]');
+      if (prev) prev.classList.remove("selected");
+    }
+    selectedCanvasBlockId = block.id;
+    if (el) el.classList.add("selected");
+    openBlockPanel(block.id);
+  }
+
+  function makeBlockDraggable(handleEl, blockEl, block) {
+    handleEl.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const canvasRect = welcomeCanvas.getBoundingClientRect();
+      const startClientX = e.clientX;
+      const startClientY = e.clientY;
+      const startX = block.x;
+      const startY = block.y;
+      let finalX = startX;
+      let finalY = startY;
+      function onMove(ev) {
+        const dxPct = ((ev.clientX - startClientX) / canvasRect.width) * 100;
+        const dyPct = ((ev.clientY - startClientY) / canvasRect.height) * 100;
+        finalX = clampPct(startX + dxPct, 0, 100 - block.width);
+        finalY = clampPct(startY + dyPct, 0, 95);
+        blockEl.style.left = finalX + "%";
+        blockEl.style.top = finalY + "%";
+      }
+      function onUp() {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        block.x = finalX;
+        block.y = finalY;
+        Store.updateAboutMeBlock(block.id, { x: finalX, y: finalY });
+        if (selectedCanvasBlockId === block.id) openBlockPanel(block.id);
+      }
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    });
+  }
+
+  function makeBlockResizable(handleEl, blockEl, block, resizeHeight) {
+    handleEl.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const canvasRect = welcomeCanvas.getBoundingClientRect();
+      const startClientX = e.clientX;
+      const startClientY = e.clientY;
+      const startWidth = block.width;
+      const startHeight = block.height || 15;
+      let finalWidth = startWidth;
+      let finalHeight = startHeight;
+      function onMove(ev) {
+        const dxPct = ((ev.clientX - startClientX) / canvasRect.width) * 100;
+        finalWidth = clampPct(startWidth + dxPct, 6, 100 - block.x);
+        blockEl.style.width = finalWidth + "%";
+        if (resizeHeight) {
+          const dyPct = ((ev.clientY - startClientY) / canvasRect.height) * 100;
+          finalHeight = clampPct(startHeight + dyPct, 4, 100 - block.y);
+          blockEl.style.height = finalHeight + "%";
+        }
+      }
+      function onUp() {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        block.width = finalWidth;
+        const patch = { width: finalWidth };
+        if (resizeHeight) {
+          block.height = finalHeight;
+          patch.height = finalHeight;
+        }
+        Store.updateAboutMeBlock(block.id, patch);
+        if (selectedCanvasBlockId === block.id) openBlockPanel(block.id);
+      }
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    });
+  }
+
+  function renderCanvasBlock(block) {
+    const el = document.createElement("div");
+    el.className = "canvas-block type-" + block.type + (editMode ? " editable-block" : "");
+    if (block.id === selectedCanvasBlockId) el.classList.add("selected");
+    el.dataset.blockId = block.id;
+    el.style.left = block.x + "%";
+    el.style.top = block.y + "%";
+    el.style.width = block.width + "%";
+    if (block.type !== "text") el.style.height = (block.height || 15) + "%";
+    if (block.background) el.style.background = block.background;
+
+    if (block.type === "text") {
+      const textEl = document.createElement("div");
+      textEl.className = "block-text";
+      textEl.textContent = block.value || "";
+      applyRichStyle(textEl, block.style || {});
+      if (editMode) {
+        textEl.classList.add("editable-text");
+        if (!block.value) textEl.classList.add("is-empty");
+        textEl.dataset.placeholder = "Type something...";
+        setPlaintextEditable(textEl);
+        textEl.addEventListener("input", () => {
+          textEl.classList.toggle("is-empty", !textEl.textContent);
+          liveUpdate(() => {
+            block.value = textEl.textContent;
+            Store.updateAboutMeBlock(block.id, { value: textEl.textContent });
+          });
+        });
+        textEl.addEventListener("focus", () => selectCanvasBlock(block, el));
+      }
+      el.appendChild(textEl);
+    } else if (block.type === "image") {
+      if (block.src) {
+        const img = document.createElement("img");
+        img.className = "block-image";
+        img.src = block.src;
+        img.alt = "";
+        el.appendChild(img);
+      } else {
+        const placeholder = document.createElement("label");
+        placeholder.className = "block-image-placeholder";
+        placeholder.textContent = editMode ? "Click to upload" : "";
+        if (editMode) {
+          const input = document.createElement("input");
+          input.type = "file";
+          input.accept = "image/*";
+          input.addEventListener("change", () => {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+              Store.updateAboutMeBlock(block.id, { src: reader.result });
+              renderDetail();
+            };
+            reader.readAsDataURL(file);
+          });
+          placeholder.appendChild(input);
+        }
+        el.appendChild(placeholder);
+      }
+    }
+
+    if (editMode) {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        selectCanvasBlock(block, el);
+      });
+
+      const dragHandle = document.createElement("div");
+      dragHandle.className = "block-drag-handle";
+      dragHandle.title = "Drag to move";
+      dragHandle.textContent = "✥";
+      makeBlockDraggable(dragHandle, el, block);
+      el.appendChild(dragHandle);
+
+      const resizeHandle = document.createElement("div");
+      resizeHandle.className = "block-resize-handle";
+      resizeHandle.title = block.type === "text" ? "Drag to resize width" : "Drag to resize";
+      makeBlockResizable(resizeHandle, el, block, block.type !== "text");
+      el.appendChild(resizeHandle);
+    }
+
+    return el;
+  }
+
+  function renderWelcomeView() {
+    welcomeCanvas.innerHTML = "";
+    Store.getAboutMeBlocks().forEach((block) => {
+      welcomeCanvas.appendChild(renderCanvasBlock(block));
+    });
+
+    if (editMode) {
+      const addBar = document.createElement("div");
+      addBar.className = "canvas-add-bar";
+      [
+        ["text", "+ Text"],
+        ["image", "+ Image"],
+        ["container", "+ Box"],
+      ].forEach(([type, label]) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = label;
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const id = Store.addAboutMeBlock(type);
+          renderDetail();
+          const newEl = welcomeCanvas.querySelector('[data-block-id="' + id + '"]');
+          const newBlock = Store.getAboutMeBlocks().find((b) => b.id === id);
+          if (newEl && newBlock) {
+            selectCanvasBlock(newBlock, newEl);
+            if (type === "text") {
+              const textEl = newEl.querySelector(".block-text");
+              if (textEl) {
+                textEl.focus();
+                const range = document.createRange();
+                range.selectNodeContents(textEl);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+            }
+          }
+        });
+        addBar.appendChild(btn);
+      });
+      welcomeCanvas.appendChild(addBar);
+    }
+  }
+
+  // Click empty canvas space to deselect — attached once, not per-render,
+  // since welcomeCanvas itself is never replaced (only its children are).
+  welcomeCanvas.addEventListener("click", (e) => {
+    if (e.target !== welcomeCanvas) return;
+    deselectCanvasBlock();
+    if (panelMode === "block") closeDesignPanel();
+  });
 
   /* ---------------- project overlay ---------------- */
   function renderSlideshowView(project) {
@@ -980,7 +1154,7 @@
       rm.textContent = "×";
       rm.addEventListener("click", () => {
         onRemove();
-        renderDesignPanel();
+        renderPanelContent();
       });
       preview.appendChild(img);
       preview.appendChild(rm);
@@ -997,7 +1171,7 @@
       rm.textContent = "×";
       rm.addEventListener("click", () => {
         onRemove();
-        renderDesignPanel();
+        renderPanelContent();
       });
       chip.appendChild(text);
       chip.appendChild(rm);
@@ -1017,7 +1191,7 @@
       const reader = new FileReader();
       reader.onload = () => {
         onUpload(reader.result);
-        renderDesignPanel();
+        renderPanelContent();
       };
       reader.readAsDataURL(file);
     });
@@ -1038,10 +1212,12 @@
   ];
 
   const designPanel = document.getElementById("designPanel");
+  const designPanelTitle = document.getElementById("designPanelTitle");
   const designPanelContent = document.getElementById("designPanelContent");
   const designPanelScrim = document.getElementById("designPanelScrim");
   const designBtn = document.getElementById("designBtn");
   const closeDesignPanelBtn = document.getElementById("closeDesignPanel");
+  let panelMode = "design"; // "design" | "block"
 
   function sectionTitle(text) {
     const h = document.createElement("h3");
@@ -1058,7 +1234,6 @@
   }
 
   function renderDesignPanel() {
-    if (designPanel.classList.contains("hidden")) return;
     const config = Store.getSiteConfig();
     const theme = config.theme;
     const headline = theme.headline || {};
@@ -1103,11 +1278,22 @@
     });
     designPanelContent.appendChild(colorGrid);
 
-    designPanelContent.appendChild(sectionTitle("Welcome content position"));
-    designPanelContent.appendChild(hint("Balance the welcome text against a custom background photo."));
-    designPanelContent.appendChild(
-      createPositionGrid(theme.contentPosition || {}, (patch) => liveUpdate(() => Store.updateContentPosition(patch)))
-    );
+    designPanelContent.appendChild(sectionTitle("Project box style"));
+    const boxStyleRow = document.createElement("div");
+    boxStyleRow.className = "box-style-row";
+    BOX_STYLES.forEach((s) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "box-style-btn" + ((theme.boxStyle || "banker") === s.key ? " active" : "");
+      btn.innerHTML = '<span class="box-style-icon">' + s.icon + "</span>" + s.label;
+      btn.addEventListener("click", () => {
+        liveUpdate(() => Store.updateTheme({ boxStyle: s.key }));
+        boxStyleRow.querySelectorAll(".box-style-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+      boxStyleRow.appendChild(btn);
+    });
+    designPanelContent.appendChild(boxStyleRow);
 
     designPanelContent.appendChild(sectionTitle("Door title style"));
     designPanelContent.appendChild(hint("The big text on the garage door — handwriting, spray-paint, poster, and more."));
@@ -1146,16 +1332,255 @@
     designPanelContent.appendChild(resetAppearanceBtn);
   }
 
+  /* ---- block inspector: same slide-out panel, contextual content ---- */
+  const BLOCK_TYPE_LABELS = { text: "Text block", image: "Image block", container: "Box" };
+
+  function renderBlockPanel(block) {
+    designPanelContent.innerHTML = "";
+
+    const typeBadge = document.createElement("p");
+    typeBadge.className = "field-hint";
+    typeBadge.style.marginBottom = "12px";
+    typeBadge.textContent = BLOCK_TYPE_LABELS[block.type] || block.type;
+    designPanelContent.appendChild(typeBadge);
+
+    designPanelContent.appendChild(sectionTitle("Position & size"));
+    designPanelContent.appendChild(hint("Drag a block by its ✥ handle, or set exact percentages here."));
+    const posGrid = document.createElement("div");
+    posGrid.className = "color-grid";
+    const numField = (label, value, key) => {
+      const input = document.createElement("input");
+      input.type = "number";
+      input.min = 0;
+      input.max = 100;
+      input.step = 1;
+      input.value = Math.round(value);
+      input.addEventListener("change", () => {
+        Store.updateAboutMeBlock(block.id, { [key]: clampPct(Number(input.value) || 0, 0, 100) });
+        renderDetail();
+        renderBlockPanel(Store.getAboutMeBlocks().find((b) => b.id === block.id));
+      });
+      return labeledField(label, input);
+    };
+    posGrid.appendChild(numField("X %", block.x, "x"));
+    posGrid.appendChild(numField("Y %", block.y, "y"));
+    posGrid.appendChild(numField("Width %", block.width, "width"));
+    if (block.type !== "text") {
+      posGrid.appendChild(numField("Height %", block.height || 15, "height"));
+    }
+    designPanelContent.appendChild(posGrid);
+
+    if (block.type === "text") {
+      designPanelContent.appendChild(sectionTitle("Text style"));
+      const style = block.style || {};
+      // style changes apply straight to the live block element (like the
+      // project-field toolbar does) instead of rebuilding the whole canvas,
+      // so there's no flicker and no risk of losing mid-edit focus.
+      function liveApply(patch) {
+        liveUpdate(() => {
+          Object.assign(style, patch);
+          Store.updateAboutMeBlockStyle(block.id, patch);
+        });
+        const textEl = welcomeCanvas.querySelector('[data-block-id="' + block.id + '"] .block-text');
+        if (textEl) applyRichStyle(textEl, style);
+      }
+      designPanelContent.appendChild(
+        labeledField(
+          "Font",
+          createFontPicker({
+            options: TEXT_FONT_OPTIONS,
+            value: style.fontKey || "",
+            includeDefault: true,
+            defaultLabel: "Default font",
+            onChange: (v) => liveApply({ fontKey: v || null }),
+          })
+        )
+      );
+      const styleRow = document.createElement("div");
+      styleRow.className = "toolbar-align";
+      styleRow.style.marginBottom = "14px";
+      const boldBtn = document.createElement("button");
+      boldBtn.type = "button";
+      boldBtn.className = "toolbar-btn" + (style.weight === "700" ? " active" : "");
+      boldBtn.textContent = "B";
+      boldBtn.addEventListener("click", () => {
+        liveApply({ weight: style.weight === "700" ? null : "700" });
+        boldBtn.classList.toggle("active", style.weight === "700");
+      });
+      const italicBtn = document.createElement("button");
+      italicBtn.type = "button";
+      italicBtn.className = "toolbar-btn" + (style.italic ? " active" : "");
+      italicBtn.textContent = "I";
+      italicBtn.addEventListener("click", () => {
+        liveApply({ italic: !style.italic });
+        italicBtn.classList.toggle("active", style.italic);
+      });
+      styleRow.appendChild(boldBtn);
+      styleRow.appendChild(italicBtn);
+      ["left", "center", "right"].forEach((a) => {
+        const abtn = document.createElement("button");
+        abtn.type = "button";
+        abtn.className = "toolbar-btn" + (style.align === a ? " active" : "");
+        abtn.textContent = a.charAt(0).toUpperCase();
+        abtn.addEventListener("click", () => {
+          liveApply({ align: style.align === a ? null : a });
+          styleRow.querySelectorAll(".toolbar-btn").forEach((b) => b.classList.remove("active"));
+          if (style.align) abtn.classList.add("active");
+        });
+        styleRow.appendChild(abtn);
+      });
+      designPanelContent.appendChild(styleRow);
+      designPanelContent.appendChild(
+        labeledField("Size", rangeFieldInner(style.size || 1, 0.6, 6, 0.1, "rem", (v) => liveApply({ size: v })))
+      );
+      designPanelContent.appendChild(
+        labeledField(
+          "Color",
+          createColorPicker({
+            value: style.color || "#2c2c2e",
+            onChange: (v) => liveApply({ color: v }),
+          })
+        )
+      );
+    }
+
+    if (block.type === "image") {
+      designPanelContent.appendChild(sectionTitle("Image"));
+      designPanelContent.appendChild(
+        fileRow(
+          "Image",
+          block.src,
+          "image/*",
+          (v) => Store.updateAboutMeBlock(block.id, { src: v }),
+          () => Store.updateAboutMeBlock(block.id, { src: "" })
+        )
+      );
+    }
+
+    designPanelContent.appendChild(sectionTitle("Background"));
+    const bgRow = document.createElement("div");
+    bgRow.className = "color-grid";
+    bgRow.appendChild(
+      labeledField(
+        "Fill",
+        createColorPicker({
+          value: block.background || "rgba(255,255,255,0)",
+          onChange: (v) => {
+            liveUpdate(() => {
+              block.background = v;
+              Store.updateAboutMeBlock(block.id, { background: v });
+            });
+            const blockEl = welcomeCanvas.querySelector('[data-block-id="' + block.id + '"]');
+            if (blockEl) blockEl.style.background = v;
+          },
+        })
+      )
+    );
+    const noBgBtn = document.createElement("button");
+    noBgBtn.type = "button";
+    noBgBtn.className = "add-row-btn";
+    noBgBtn.textContent = "No background";
+    noBgBtn.addEventListener("click", () => {
+      Store.updateAboutMeBlock(block.id, { background: null });
+      renderDetail();
+      renderBlockPanel(Store.getAboutMeBlocks().find((b) => b.id === block.id));
+    });
+    designPanelContent.appendChild(bgRow);
+    designPanelContent.appendChild(noBgBtn);
+
+    designPanelContent.appendChild(sectionTitle("Layer"));
+    const layerRow = document.createElement("div");
+    layerRow.className = "edit-toolbar-actions";
+    const frontBtn = document.createElement("button");
+    frontBtn.type = "button";
+    frontBtn.textContent = "Bring to front";
+    frontBtn.addEventListener("click", () => { Store.moveAboutMeBlockToFront(block.id); renderDetail(); });
+    const backBtn = document.createElement("button");
+    backBtn.type = "button";
+    backBtn.textContent = "Send to back";
+    backBtn.addEventListener("click", () => { Store.moveAboutMeBlockToBack(block.id); renderDetail(); });
+    layerRow.appendChild(frontBtn);
+    layerRow.appendChild(backBtn);
+    designPanelContent.appendChild(layerRow);
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "danger-btn";
+    deleteBtn.style.marginTop = "18px";
+    deleteBtn.textContent = "Delete block";
+    deleteBtn.addEventListener("click", () => {
+      confirmAction("Delete this block? This can't be undone.").then((ok) => {
+        if (!ok) return;
+        Store.deleteAboutMeBlock(block.id);
+        closeDesignPanel();
+        renderDetail();
+      });
+    });
+    designPanelContent.appendChild(deleteBtn);
+  }
+
+  function rangeFieldInner(value, min, max, step, suffix, onChange) {
+    const row = document.createElement("div");
+    row.className = "range-row";
+    const input = document.createElement("input");
+    input.type = "range";
+    input.min = min;
+    input.max = max;
+    input.step = step;
+    input.value = value;
+    const valueLabel = document.createElement("span");
+    valueLabel.className = "range-value";
+    valueLabel.textContent = value.toFixed(2) + suffix;
+    input.addEventListener("input", () => {
+      valueLabel.textContent = Number(input.value).toFixed(2) + suffix;
+      onChange(Number(input.value));
+    });
+    row.appendChild(input);
+    row.appendChild(valueLabel);
+    return row;
+  }
+
+  function renderPanelContent() {
+    if (designPanel.classList.contains("hidden")) return;
+    if (panelMode === "block") {
+      const block = Store.getAboutMeBlocks().find((b) => b.id === selectedCanvasBlockId);
+      if (block) {
+        renderBlockPanel(block);
+        return;
+      }
+      // the selected block was deleted elsewhere — fall back to Design
+      panelMode = "design";
+      designPanelTitle.textContent = "Design";
+      selectedCanvasBlockId = null;
+    }
+    renderDesignPanel();
+  }
+
   function openDesignPanel() {
+    panelMode = "design";
+    deselectCanvasBlock();
+    designPanelTitle.textContent = "Design";
     designPanel.classList.remove("hidden");
     designPanel.setAttribute("aria-hidden", "false");
     designPanelScrim.classList.remove("hidden");
-    renderDesignPanel();
+    renderPanelContent();
+  }
+  function openBlockPanel(id) {
+    panelMode = "block";
+    designPanelTitle.textContent = "Block";
+    designPanel.classList.remove("hidden");
+    designPanel.setAttribute("aria-hidden", "false");
+    designPanelScrim.classList.remove("hidden");
+    renderPanelContent();
   }
   function closeDesignPanel() {
     designPanel.classList.add("hidden");
     designPanel.setAttribute("aria-hidden", "true");
     designPanelScrim.classList.add("hidden");
+    if (panelMode === "block") {
+      deselectCanvasBlock();
+      panelMode = "design";
+    }
   }
   designBtn.addEventListener("click", openDesignPanel);
   closeDesignPanelBtn.addEventListener("click", closeDesignPanel);
@@ -1227,7 +1652,7 @@
     updateEditUI();
     if (!suppressDetailRerender) {
       renderDetail();
-      renderDesignPanel();
+      renderPanelContent();
     }
   });
 

@@ -12,8 +12,6 @@
   --headline-size: 4rem;
   --headline-rotate: 0deg;
   --headline-color: #24262a;
-  --welcome-align: center;
-  --welcome-justify: flex-start;
 }
 
 /* ---------- reset & base ---------- */
@@ -511,6 +509,52 @@ a { color: inherit; }
   background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.28)), var(--featured-box-color);
 }
 
+/* ---- box style: Flat Card — no lid/notch, label sits on the card itself ---- */
+.box-style-card .box-lid,
+.box-style-card .box-label::before,
+.box-style-card .box-label::after {
+  display: none;
+}
+.box-style-card .box-inner::after { display: none; }
+.box-style-card .box-label {
+  background: transparent;
+  box-shadow: none;
+  margin: 14px 12px;
+  min-height: 0;
+}
+.box-style-card .box-title,
+.box-style-card .box-tagline {
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.45);
+}
+
+/* ---- box style: Minimal — no box chrome, just an underlined text row ---- */
+.box-style-minimal .box-lid,
+.box-style-minimal .box-label::before,
+.box-style-minimal .box-label::after,
+.box-style-minimal .box-inner::after {
+  display: none;
+}
+.box-style-minimal .box-inner {
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.18);
+}
+.box-style-minimal .box-label {
+  background: transparent;
+  box-shadow: none;
+  margin: 0;
+  padding: 10px 4px;
+  min-height: 0;
+}
+.box-style-minimal .box-title,
+.box-style-minimal .box-tagline {
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.45);
+}
+.box-style-minimal .project-box:hover .box-inner { transform: none; box-shadow: none; }
+
 /* ==========================================================================
    CONTENT AREA: welcome layer (always on the background) + project overlay
    (slides/fades over it; toggled by clicking the open project again)
@@ -524,11 +568,7 @@ a { color: inherit; }
   position: absolute;
   inset: 0;
   overflow-y: auto;
-  padding: 32px 36px 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: var(--welcome-align, center);
-  justify-content: var(--welcome-justify, flex-start);
+  overflow-x: hidden;
 }
 .welcome-layer::-webkit-scrollbar { width: 8px; }
 .welcome-layer::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
@@ -554,51 +594,129 @@ a { color: inherit; }
 .project-overlay::-webkit-scrollbar { width: 8px; }
 .project-overlay::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
 
-/* ---------- welcome state (sits directly on the garage background) ---------- */
-.welcome {
-  max-width: 640px;
+/* ---------- welcome canvas: free-form "slide" of blocks ---------- */
+.welcome-canvas {
+  position: relative;
   width: 100%;
-  margin: 20px 0;
-  flex: none;
+  min-height: 100%;
+  padding-bottom: 40px;
 }
-.welcome h1 {
-  margin: 0 0 14px;
-  font-size: 1.8rem;
-  color: #f5f5f6;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+
+.canvas-block {
+  position: absolute;
+  box-sizing: border-box;
 }
-.welcome .intro {
-  font-size: 1.05rem;
-  line-height: 1.55;
-  color: #dcdde0;
-  text-shadow: 0 1px 5px rgba(0,0,0,0.5);
-  margin-bottom: 26px;
-}
-.welcome .about-box {
-  /* the customizable rectangle — its color is the "Detail panel" swatch */
-  background: var(--panel-color);
+.canvas-block.type-container {
   border-radius: 8px;
-  padding: 18px 20px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
-  margin-bottom: 20px;
-  line-height: 1.55;
-  color: #3a3a3c;
 }
-.welcome .about-box h3 {
-  margin: 0 0 8px;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #8a8a8c;
+.canvas-block.type-text {
+  padding: 4px;
 }
-.welcome .nav-hint {
-  font-size: 0.9rem;
-  color: #dcdde0;
+.block-text {
+  color: #f5f5f6;
   text-shadow: 0 1px 4px rgba(0,0,0,0.5);
   line-height: 1.5;
-  border-left: 3px solid var(--accent-color);
-  padding-left: 14px;
+  min-height: 1.4em;
+  outline: none;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 }
+.block-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+.block-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(255,255,255,0.4);
+  border-radius: 8px;
+  color: #e4e4e6;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: center;
+  padding: 8px;
+}
+.block-image-placeholder input[type="file"] { display: none; }
+
+/* edit-mode chrome: hover/selected outline + drag & resize handles */
+.canvas-block.editable-block {
+  outline: 1.5px dashed transparent;
+  outline-offset: 3px;
+  cursor: default;
+}
+.canvas-block.editable-block:hover { outline-color: rgba(244, 185, 66, 0.5); }
+.canvas-block.editable-block.selected {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 3px;
+}
+.canvas-block .block-drag-handle,
+.canvas-block .block-resize-handle {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.canvas-block.editable-block:hover .block-drag-handle,
+.canvas-block.editable-block.selected .block-drag-handle,
+.canvas-block.editable-block:hover .block-resize-handle,
+.canvas-block.editable-block.selected .block-resize-handle {
+  opacity: 1;
+}
+.block-drag-handle {
+  position: absolute;
+  top: -14px;
+  left: -14px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  color: #2c2c2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  cursor: grab;
+  z-index: 5;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+.block-drag-handle:active { cursor: grabbing; }
+.block-resize-handle {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--accent-color);
+  border: 2px solid #fff;
+  cursor: nwse-resize;
+  z-index: 5;
+}
+
+.canvas-add-bar {
+  position: sticky;
+  top: 10px;
+  left: 10px;
+  z-index: 6;
+  display: flex;
+  width: max-content;
+  gap: 6px;
+  margin: 10px;
+}
+.canvas-add-bar button {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1.5px dashed rgba(255,255,255,0.5);
+  background: rgba(0,0,0,0.35);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.canvas-add-bar button:hover { background: rgba(0,0,0,0.55); }
 
 /* ---------- editable text blocks (Edit Mode: click to type in place) ---------- */
 .editable-text {
@@ -1299,27 +1417,29 @@ a { color: inherit; }
 }
 
 /* ==========================================================================
-   POSITION GRID (visual left/center/right x top/center/bottom picker)
+   PROJECT BOX STYLE PICKER (Design panel)
    ========================================================================== */
-.position-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.box-style-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.box-style-btn {
+  display: flex;
+  align-items: center;
   gap: 6px;
-  width: 120px;
-  aspect-ratio: 1;
-  padding: 8px;
+  padding: 9px 14px;
   border: 1px solid #cfcabb;
-  border-radius: 8px;
-  background: #f4f1e8;
-}
-.position-cell {
-  border: none;
-  border-radius: 4px;
+  border-radius: 999px;
   background: #fff;
-  box-shadow: inset 0 0 0 1px #d8d2bd;
+  color: #2c2c2e;
+  font-size: 0.82rem;
+  font-weight: 600;
 }
-.position-cell:hover { background: rgba(244, 185, 66, 0.25); }
-.position-cell.active { background: var(--accent-color); box-shadow: none; }
+.box-style-btn:hover { border-color: var(--accent-color); }
+.box-style-btn.active { background: var(--accent-color); border-color: var(--accent-color); }
+.box-style-icon { font-size: 1rem; }
 
 /* ==========================================================================
    FLOATING FORMAT TOOLBAR (appears above/below the block being edited)
@@ -1458,5 +1578,5 @@ a { color: inherit; }
   .featured-section, .all-projects-section { flex: 1 1 100%; }
   .rolodex { max-height: 240px; }
   .project-body { grid-template-columns: 1fr; }
-  .welcome-layer, .project-overlay { padding: 22px; }
+  .project-overlay { padding: 22px; }
 }

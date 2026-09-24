@@ -187,26 +187,3 @@ function createColorPicker(opts) {
   wrap.appendChild(popover);
   return wrap;
 }
-
-/* ---------------- 3x3 position grid ---------------- */
-function createPositionGrid(value, onChange) {
-  const grid = document.createElement("div");
-  grid.className = "position-grid";
-  const hs = ["left", "center", "right"];
-  const vs = ["top", "center", "bottom"];
-  vs.forEach((v) => {
-    hs.forEach((h) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "position-cell" + (value.horizontal === h && value.vertical === v ? " active" : "");
-      btn.title = v + " / " + h;
-      btn.addEventListener("click", () => {
-        onChange({ horizontal: h, vertical: v });
-        grid.querySelectorAll(".position-cell").forEach((c) => c.classList.remove("active"));
-        btn.classList.add("active");
-      });
-      grid.appendChild(btn);
-    });
-  });
-  return grid;
-}

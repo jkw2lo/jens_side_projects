@@ -48,6 +48,12 @@ const HEADLINE_FONT_OPTIONS = [
   },
 ];
 
+const BOX_STYLES = [
+  { key: "banker", label: "Banker Box", icon: "📦" },
+  { key: "card", label: "Flat Card", icon: "🗂️" },
+  { key: "minimal", label: "Minimal", icon: "▬" },
+];
+
 // Combined, deduped catalogue used by the per-text-block font picker, so
 // any block (not just the door title) can use the full variety.
 const TEXT_FONT_OPTIONS = (function () {
@@ -124,11 +130,11 @@ function applyTheme(theme) {
   root.setProperty("--headline-color", headline.color || "#24262a");
   loadGoogleFont("headlineFontLink", hFont.googleFont);
 
-  const pos = theme.contentPosition || {};
-  const H_ALIGN = { left: "flex-start", center: "center", right: "flex-end" };
-  const V_ALIGN = { top: "flex-start", center: "center", bottom: "flex-end" };
-  root.setProperty("--welcome-align", H_ALIGN[pos.horizontal] || "center");
-  root.setProperty("--welcome-justify", V_ALIGN[pos.vertical] || "flex-start");
+  const sidebarEl = document.querySelector(".sidebar");
+  if (sidebarEl) {
+    BOX_STYLES.forEach((s) => sidebarEl.classList.remove("box-style-" + s.key));
+    sidebarEl.classList.add("box-style-" + (theme.boxStyle || "banker"));
+  }
 
   const bgEl = document.getElementById("garageBg");
   if (bgEl) {

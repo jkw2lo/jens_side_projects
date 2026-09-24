@@ -28,30 +28,78 @@ const SITE_CONFIG = {
       rotate: 0, // degrees
       color: "#24262a",
     },
-    // Where the welcome text sits over the garage background — handy for
-    // balancing it against a custom background image.
-    contentPosition: {
-      horizontal: "center", // left | center | right
-      vertical: "top", // top | center | bottom
-    },
+    // "banker" | "card" | "minimal" — see BOX_STYLES in js/theme.js
+    boxStyle: "banker",
   },
 };
 
-// Shown in the center panel when no project is selected.
+/*
+  The welcome area (shown when no project is selected) is a free-form
+  canvas, like a single slide — every block is independently positioned,
+  sized, and styled. Edit it in the browser (Edit Mode draws drag/resize
+  handles and a block inspector panel), or hand-edit the list below.
+
+  Each block:
+    id         - unique short string
+    type       - "text" | "image" | "container"
+    x, y       - top-left position, as a percentage (0-100) of the canvas
+    width      - as a percentage (0-100) of the canvas width
+    height     - percentage of canvas height (text blocks ignore this —
+                 their height follows their content)
+    value      - text content (type "text" only)
+    src        - image path/URL or data URL (type "image" only)
+    style      - font/size/weight/italic/align/color override (type "text"
+                 only) — leave {} to use the site default font
+    background - an rgba(...) color string for a rectangle behind the
+                 block's content, or null for no background (any type)
+*/
 const ABOUT_ME = {
-  heading: "Welcome to my side projects garage",
-  intro:
-    "Hi, I'm Jen! This is where I keep the things I've built outside of work. " +
-    "Pick a project from the boxes on the left to see what it does, why I made it, and what I learned.",
-  about:
-    "Edit ABOUT_ME.about in js/data.js with a short bio — who you are, what " +
-    "you like building, and anything else you want a visitor to know.",
-  navHint:
-    "Featured projects are pinned at the top of the left column. Everything " +
-    "else lives in the scrollable stack below it — click any box to open it.",
-  // Per-field font/size/weight/italic/align/color overrides, set from the
-  // format toolbar in Edit Mode. Leave empty to use the site default font.
-  styles: {},
+  blocks: [
+    {
+      id: "heading",
+      type: "text",
+      x: 8, y: 6, width: 74,
+      value: "Welcome to my side projects garage",
+      style: { size: 2, weight: "700", color: "rgba(245, 245, 246, 1)" },
+      background: null,
+    },
+    {
+      id: "intro",
+      type: "text",
+      x: 8, y: 18, width: 68,
+      value:
+        "Hi, I'm Jen! This is where I keep the things I've built outside of work. " +
+        "Pick a project from the boxes on the left to see what it does, why I made it, and what I learned.",
+      style: { size: 1.1, color: "rgba(220, 221, 224, 1)" },
+      background: null,
+    },
+    {
+      id: "about-bg",
+      type: "container",
+      x: 8, y: 34, width: 66, height: 22,
+      background: "rgba(255, 255, 255, 1)",
+    },
+    {
+      id: "about-text",
+      type: "text",
+      x: 10, y: 36, width: 62,
+      value:
+        "About me — edit this block in js/data.js (or click it in Edit Mode) with a " +
+        "short bio: who you are, what you like building, anything else you want a visitor to know.",
+      style: { color: "rgba(58, 58, 60, 1)" },
+      background: null,
+    },
+    {
+      id: "nav-hint",
+      type: "text",
+      x: 8, y: 60, width: 62,
+      value:
+        "Featured projects are pinned at the top of the left column. Everything " +
+        "else lives in the scrollable stack below it — click any box to open it.",
+      style: { size: 0.9, color: "rgba(220, 221, 224, 1)" },
+      background: null,
+    },
+  ],
 };
 
 /*

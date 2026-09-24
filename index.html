@@ -85,7 +85,9 @@
       </aside>
 
       <div class="content-area">
-        <div id="welcomeLayer" class="welcome-layer"></div>
+        <div id="welcomeLayer" class="welcome-layer">
+          <div id="welcomeCanvas" class="welcome-canvas"></div>
+        </div>
         <div id="projectOverlay" class="project-overlay"></div>
       </div>
     </div>
@@ -94,8 +96,8 @@
   <div id="designPanelScrim" class="design-panel-scrim hidden"></div>
   <div id="designPanel" class="design-panel hidden" aria-hidden="true">
     <div class="design-panel-header">
-      <h2>Design</h2>
-      <button id="closeDesignPanel" type="button" class="icon-btn" aria-label="Close design panel">×</button>
+      <h2 id="designPanelTitle">Design</h2>
+      <button id="closeDesignPanel" type="button" class="icon-btn" aria-label="Close panel">×</button>
     </div>
     <div id="designPanelContent" class="design-panel-content"></div>
   </div>

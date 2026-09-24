@@ -33,8 +33,27 @@ const Store = (function () {
     }
   }
 
-  // Fill in any fields added to SITE_CONFIG after this browser last saved,
-  // so older localStorage data doesn't crash the theme/branding code.
+  function makeBlockId() {
+    return "block-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  // A browser that saved before the welcome area became a free-form canvas
+  // only has the old fixed heading/intro/about/navHint fields — turn those
+  // into blocks, roughly matching how they used to be laid out, instead of
+  // losing the visitor's text.
+  function synthesizeBlocksFromLegacy(about) {
+    const styles = about.styles || {};
+    return [
+      { id: makeBlockId(), type: "text", x: 8, y: 6, width: 74, value: about.heading || "", style: styles.heading || {}, background: null },
+      { id: makeBlockId(), type: "text", x: 8, y: 18, width: 68, value: about.intro || "", style: styles.intro || {}, background: null },
+      { id: makeBlockId(), type: "container", x: 8, y: 34, width: 66, height: 22, background: "rgba(255, 255, 255, 1)" },
+      { id: makeBlockId(), type: "text", x: 10, y: 36, width: 62, value: about.about || "", style: styles.about || {}, background: null },
+      { id: makeBlockId(), type: "text", x: 8, y: 60, width: 62, value: about.navHint || "", style: styles.navHint || {}, background: null },
+    ];
+  }
+
+  // Fill in any fields added after this browser last saved, so older
+  // localStorage data doesn't crash the theme/branding/canvas code.
   function migrate(s) {
     if (!s.siteConfig.brandText) s.siteConfig.brandText = SITE_CONFIG.brandText;
     if (!s.siteConfig.theme) s.siteConfig.theme = JSON.parse(JSON.stringify(SITE_CONFIG.theme));
@@ -44,8 +63,10 @@ const Store = (function () {
     });
     if (!s.siteConfig.theme.fontKey) s.siteConfig.theme.fontKey = SITE_CONFIG.theme.fontKey;
     if (!s.siteConfig.theme.headline) s.siteConfig.theme.headline = JSON.parse(JSON.stringify(SITE_CONFIG.theme.headline));
-    if (!s.siteConfig.theme.contentPosition) s.siteConfig.theme.contentPosition = JSON.parse(JSON.stringify(SITE_CONFIG.theme.contentPosition));
-    if (!s.aboutMe.styles) s.aboutMe.styles = {};
+    if (!s.siteConfig.theme.boxStyle) s.siteConfig.theme.boxStyle = SITE_CONFIG.theme.boxStyle;
+    if (!s.aboutMe.blocks) {
+      s.aboutMe.blocks = s.aboutMe.heading !== undefined ? synthesizeBlocksFromLegacy(s.aboutMe) : JSON.parse(JSON.stringify(ABOUT_ME.blocks));
+    }
     s.projects.forEach((p) => {
       if (!p.styles) p.styles = {};
     });
@@ -115,18 +136,62 @@ const Store = (function () {
       persist();
     },
 
-    updateAboutMe(patch) {
-      Object.assign(state.aboutMe, patch);
+    // ---- welcome canvas blocks (free-form text/image/container) ----
+    getAboutMeBlocks: () => state.aboutMe.blocks,
+
+    addAboutMeBlock(type) {
+      const base = { id: makeBlockId(), type, x: 30, y: 40 };
+      let block;
+      if (type === "text") {
+        block = Object.assign(base, { width: 40, value: "New text", style: {}, background: null });
+      } else if (type === "image") {
+        block = Object.assign(base, { width: 30, height: 20, src: "", background: null });
+      } else {
+        block = Object.assign(base, { width: 30, height: 16, background: "rgba(255, 255, 255, 1)" });
+      }
+      state.aboutMe.blocks.push(block);
+      persist();
+      return block.id;
+    },
+
+    updateAboutMeBlock(id, patch) {
+      const b = state.aboutMe.blocks.find((b) => b.id === id);
+      if (!b) return;
+      Object.assign(b, patch);
       persist();
     },
 
-    // Per-field rich-text formatting overrides (font/size/weight/italic/
-    // align/color). Any field left null/unset falls back to the site
+    // Per-block rich-text formatting override (font/size/weight/italic/
+    // align/color). Left null/unset, a block falls back to the site
     // default — this is how "default unless the user overrides it" works.
-    updateAboutMeStyle(field, patch) {
-      if (!state.aboutMe.styles) state.aboutMe.styles = {};
-      if (!state.aboutMe.styles[field]) state.aboutMe.styles[field] = {};
-      Object.assign(state.aboutMe.styles[field], patch);
+    updateAboutMeBlockStyle(id, patch) {
+      const b = state.aboutMe.blocks.find((b) => b.id === id);
+      if (!b) return;
+      if (!b.style) b.style = {};
+      Object.assign(b.style, patch);
+      persist();
+    },
+
+    deleteAboutMeBlock(id) {
+      state.aboutMe.blocks = state.aboutMe.blocks.filter((b) => b.id !== id);
+      persist();
+    },
+
+    moveAboutMeBlockToFront(id) {
+      const arr = state.aboutMe.blocks;
+      const idx = arr.findIndex((b) => b.id === id);
+      if (idx < 0) return;
+      const [b] = arr.splice(idx, 1);
+      arr.push(b);
+      persist();
+    },
+
+    moveAboutMeBlockToBack(id) {
+      const arr = state.aboutMe.blocks;
+      const idx = arr.findIndex((b) => b.id === id);
+      if (idx < 0) return;
+      const [b] = arr.splice(idx, 1);
+      arr.unshift(b);
       persist();
     },
 
@@ -151,11 +216,6 @@ const Store = (function () {
 
     updateHeadline(patch) {
       Object.assign(state.siteConfig.theme.headline, patch);
-      persist();
-    },
-
-    updateContentPosition(patch) {
-      Object.assign(state.siteConfig.theme.contentPosition, patch);
       persist();
     },
 

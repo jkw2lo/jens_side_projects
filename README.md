@@ -11,14 +11,24 @@ HTML/CSS/JS — no build step, so it deploys straight to GitHub Pages.
 Click **Edit** in the top-right corner of the live site. Editing happens
 directly on the page — there's no separate form to fill out:
 
-- **Click any text** (the welcome heading/intro/about-me, a project's name,
-  purpose, audience, features, personal note...) and type. A floating
-  toolbar appears above it with a font picker that previews every option in
-  its own real typeface, a size stepper, bold/italic, alignment, and a
-  color swatch with an opacity slider — set any of these to override that
-  one block, or leave it on "Default font" to inherit the site font. Click
-  elsewhere to dismiss the toolbar; **Reset** in the toolbar clears a
-  block's overrides back to the default.
+- **The welcome area (when no project is selected) is a free-form canvas —
+  like a single slide.** Drag any block by its ✥ handle, resize it from its
+  corner handle, and layer blocks with "Bring to front"/"Send to back".
+  Click **+ Text**, **+ Image**, or **+ Box** (top-left of the canvas) to
+  add a new block anywhere. Click a block to select it — a **Block** panel
+  opens with exact X/Y/Width/Height percentages (for precise placement, not
+  just eyeballed dragging), its own background color + opacity, and for
+  text blocks a font/size/bold/italic/align/color, all independent of the
+  other blocks. Delete a block from the same panel. Nothing here is fixed
+  chrome — the shipped heading/intro/about/nav-hint are just the starting
+  blocks, fully movable, resizable, restylable, or deletable.
+- **Click any project text** (name, purpose, audience, features, personal
+  note) and type. A floating toolbar appears above it with a font picker
+  that previews every option in its own real typeface, a size stepper,
+  bold/italic, alignment, and a color swatch with an opacity slider — set
+  any of these to override that block, or leave it on "Default font" to
+  inherit the site font. **Reset** in the toolbar clears a block's
+  overrides back to the default.
 - Images: click **+ Add** in a project's thumbnail strip to upload, or drop
   an image path/URL into the field below it. Reorder or remove with the
   arrows/× on each thumbnail.
@@ -27,12 +37,12 @@ directly on the page — there's no separate form to fill out:
 - A project's link: click **Visit project** in edit mode to edit the URL in
   a small popover instead of navigating away.
 - Add, delete, reorder, and star projects as "Featured" (max 3) from the
-  left column.
+  left column. Pick a different **box style** for them — Banker Box, Flat
+  Card, or Minimal — in the Design panel.
 - Site-wide settings live in the **🎨 Design** panel (top toolbar): header
   text, resume, contact email, the default site font, 7 colors (each with
-  its own opacity slider), where the welcome text sits over the background
-  (a visual 3x3 grid), the door title's own font/size/angle/color, and an
-  optional custom background image.
+  its own opacity slider), the project box style, the door title's own
+  font/size/angle/color, and an optional custom background image.
 
 Changes autosave to that browser's local storage as you go — nothing is
 published yet, it's just visible to you, in that browser, until you publish
@@ -55,10 +65,12 @@ than an uploaded one.
 You can also hand-edit **[`js/data.js`](js/data.js)** instead of using Edit
 Mode — it defines `SITE_CONFIG`, `ABOUT_ME`, and `PROJECTS` with comments
 explaining each field. This is what Edit Mode reads as its starting point
-whenever a browser has no local edits saved. Each text field's formatting
-override (if any) lives in a sibling `styles` object, e.g.
-`ABOUT_ME.styles.heading` or `project.styles.purpose` — leave a field out
-of `styles` (or leave `styles: {}`) to use the site default.
+whenever a browser has no local edits saved. `ABOUT_ME.blocks` is the
+welcome canvas — each entry has its own `type` (`text`/`image`/`container`),
+`x`/`y`/`width`/`height` percentages, and (for text) a `style` override.
+Each project's text field formatting override (if any) lives in a sibling
+`styles` object, e.g. `project.styles.purpose` — leave a field out of
+`styles` (or leave `styles: {}`) to use the site default.
 
 ## Running it locally
 
