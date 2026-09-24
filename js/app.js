@@ -12,16 +12,13 @@
     doorOpened = true;
     garageDoor.classList.add("opening");
     garageScene.removeAttribute("aria-hidden");
-    // #garageDoor also hosts the content-fade and shine-sweep animations
-    // (the latter via ::after, which bubbles animationend to this element
-    // too), so filter to the door's own roll-up animation specifically —
-    // otherwise the shortest of the three would hide the overlay early.
-    function onDoorAnimEnd(e) {
-      if (e.animationName !== "doorRollUp") return;
-      doorOverlay.style.display = "none";
-      garageDoor.removeEventListener("animationend", onDoorAnimEnd);
-    }
-    garageDoor.addEventListener("animationend", onDoorAnimEnd);
+    garageDoor.addEventListener(
+      "transitionend",
+      () => {
+        doorOverlay.style.display = "none";
+      },
+      { once: true }
+    );
   }
 
   doorOverlay.addEventListener("click", openDoor);

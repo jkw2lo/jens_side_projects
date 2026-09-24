@@ -55,73 +55,21 @@ a { color: inherit; }
   inset: 0;
   display: flex;
   flex-direction: column;
-  transform-origin: top center;
-  perspective: 700px;
-  will-change: transform;
   background: var(--door-color);
   box-shadow: inset 0 -40px 60px -30px rgba(0,0,0,0.35);
+  transition: transform 0.7s ease-in-out;
 }
 
 #garageDoor.opening {
-  animation: doorRollUp 1.65s forwards;
+  transform: translateY(-100%);
 }
 
-/* A real garage door doesn't glide smoothly: it shudders as the motor
-   engages, accelerates through the middle, then overshoots and settles
-   as it hits the top track. Per-keyframe easing shapes each segment. */
-@keyframes doorRollUp {
-  0%   { transform: translate(0, 0); animation-timing-function: ease-in; }
-  4%   { transform: translate(-3px, -0.3%); animation-timing-function: ease-in-out; }
-  8%   { transform: translate(3px, -0.6%); animation-timing-function: ease-in-out; }
-  12%  { transform: translate(-2px, -1.2%); animation-timing-function: cubic-bezier(0.6, 0, 0.85, 0.35); }
-  50%  { transform: translate(0, -58%); animation-timing-function: cubic-bezier(0.7, 0, 0.85, 0.35); }
-  82%  { transform: translate(0, -102%); animation-timing-function: ease-out; }
-  91%  { transform: translate(0, -97.5%); animation-timing-function: ease-in-out; }
-  100% { transform: translate(0, -100%); }
-}
-
-#garageDoor.opening .door-content {
-  animation: doorContentFade 0.6s ease-in forwards;
-}
-
-#garageDoor::after {
-  /* diagonal light sweep across the panels while it rises */
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.22) 48%, transparent 62%);
-  background-size: 250% 250%;
-  background-position: 130% 0%;
-  opacity: 0;
-  pointer-events: none;
-}
-#garageDoor.opening::after {
-  animation: doorShine 1.2s ease-out forwards;
-}
-@keyframes doorShine {
-  0% { opacity: 0; background-position: 130% 0%; }
-  18% { opacity: 1; }
-  75% { opacity: 1; background-position: -30% 100%; }
-  100% { opacity: 0; background-position: -30% 100%; }
-}
-
-@keyframes doorContentFade {
-  0%   { opacity: 1; filter: blur(0); }
-  100% { opacity: 0; filter: blur(3px); transform: scale(1.04); }
-}
-
-/* Each panel is a real hinged section: as the door rises, the topmost
-   panel reaches the track curve first and folds back out of sight, then
-   the next one, and so on — a cascading unroll instead of one flat sheet. */
 .door-panel {
   flex: 1;
   position: relative;
   background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(0,0,0,0.14)), var(--door-color);
   border-top: 1px solid rgba(255,255,255,0.18);
   border-bottom: 2px solid rgba(0,0,0,0.3);
-  transform-origin: top center;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
 }
 .door-panel::after {
   /* recessed panel face, like a real sectional door */
@@ -132,29 +80,6 @@ a { color: inherit; }
   border-top-color: rgba(255,255,255,0.12);
   border-radius: 2px;
   pointer-events: none;
-}
-
-/* Only ONE panel is ever mid-fold at a time — the one currently passing
-   through the curve — while panels below it stay perfectly flat (still
-   waiting their turn) and panels above it stay folded (already through).
-   The whole door keeps translating up continuously underneath via the
-   parent's own animation regardless of which panel is folding, so panels
-   not yet folding still visibly "shift up smoothly" as rigid flat pieces.
-   Each panel's delay is exactly the previous one's delay + duration, so
-   there is zero overlap and zero gap between successive folds. */
-#garageDoor.opening .door-panel {
-  animation: panelFold 0.22s cubic-bezier(0.45, 0, 0.55, 1) forwards;
-}
-#garageDoor.opening .door-panel:nth-child(1) { animation-delay: 0.10s; }
-#garageDoor.opening .door-panel:nth-child(2) { animation-delay: 0.32s; }
-#garageDoor.opening .door-panel:nth-child(3) { animation-delay: 0.54s; }
-#garageDoor.opening .door-panel:nth-child(4) { animation-delay: 0.76s; }
-#garageDoor.opening .door-panel:nth-child(5) { animation-delay: 0.98s; }
-#garageDoor.opening .door-panel:nth-child(6) { animation-delay: 1.20s; }
-
-@keyframes panelFold {
-  0%   { transform: rotateX(0deg) translateY(0); filter: brightness(1); }
-  100% { transform: rotateX(-80deg) translateY(-4px); filter: brightness(0.65); }
 }
 
 .door-handle {
@@ -224,12 +149,12 @@ a { color: inherit; }
   transform: translateY(10px);
 }
 #garageScene:not([aria-hidden]) .top-bar {
-  animation: sceneFadeIn 0.8s ease forwards;
-  animation-delay: 0.75s;
+  animation: sceneFadeIn 0.5s ease forwards;
+  animation-delay: 0.3s;
 }
 #garageScene:not([aria-hidden]) .main-layout {
-  animation: sceneFadeIn 0.8s ease forwards;
-  animation-delay: 0.95s;
+  animation: sceneFadeIn 0.5s ease forwards;
+  animation-delay: 0.4s;
 }
 @keyframes sceneFadeIn {
   from { opacity: 0; transform: translateY(10px); }
