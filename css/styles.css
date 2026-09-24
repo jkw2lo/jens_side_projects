@@ -134,15 +134,23 @@ a { color: inherit; }
   pointer-events: none;
 }
 
+/* Only ONE panel is ever mid-fold at a time — the one currently passing
+   through the curve — while panels below it stay perfectly flat (still
+   waiting their turn) and panels above it stay folded (already through).
+   The whole door keeps translating up continuously underneath via the
+   parent's own animation regardless of which panel is folding, so panels
+   not yet folding still visibly "shift up smoothly" as rigid flat pieces.
+   Each panel's delay is exactly the previous one's delay + duration, so
+   there is zero overlap and zero gap between successive folds. */
 #garageDoor.opening .door-panel {
-  animation: panelFold 0.4s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+  animation: panelFold 0.22s cubic-bezier(0.45, 0, 0.55, 1) forwards;
 }
-#garageDoor.opening .door-panel:nth-child(1) { animation-delay: 0.02s; }
-#garageDoor.opening .door-panel:nth-child(2) { animation-delay: 0.13s; }
-#garageDoor.opening .door-panel:nth-child(3) { animation-delay: 0.26s; }
-#garageDoor.opening .door-panel:nth-child(4) { animation-delay: 0.41s; }
-#garageDoor.opening .door-panel:nth-child(5) { animation-delay: 0.58s; }
-#garageDoor.opening .door-panel:nth-child(6) { animation-delay: 0.78s; }
+#garageDoor.opening .door-panel:nth-child(1) { animation-delay: 0.10s; }
+#garageDoor.opening .door-panel:nth-child(2) { animation-delay: 0.32s; }
+#garageDoor.opening .door-panel:nth-child(3) { animation-delay: 0.54s; }
+#garageDoor.opening .door-panel:nth-child(4) { animation-delay: 0.76s; }
+#garageDoor.opening .door-panel:nth-child(5) { animation-delay: 0.98s; }
+#garageDoor.opening .door-panel:nth-child(6) { animation-delay: 1.20s; }
 
 @keyframes panelFold {
   0%   { transform: rotateX(0deg) translateY(0); filter: brightness(1); }
