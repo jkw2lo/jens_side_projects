@@ -441,6 +441,17 @@
     ["panel", "Detail panel"],
   ];
 
+  const POSITION_H_OPTIONS = [
+    { key: "left", label: "Left" },
+    { key: "center", label: "Center" },
+    { key: "right", label: "Right" },
+  ];
+  const POSITION_V_OPTIONS = [
+    { key: "top", label: "Top" },
+    { key: "center", label: "Center" },
+    { key: "bottom", label: "Bottom" },
+  ];
+
   function renderWelcomeForm() {
     const about = Store.getAboutMe();
     const config = Store.getSiteConfig();
@@ -503,6 +514,27 @@
       colorGrid.appendChild(colorField(label, theme.colors[key], (v) => Store.updateThemeColor(key, v)));
     });
     wrap.appendChild(colorGrid);
+
+    const hPosition = document.createElement("h2");
+    hPosition.className = "form-section-title";
+    hPosition.textContent = "Welcome content position";
+    wrap.appendChild(hPosition);
+    const positionHint = document.createElement("p");
+    positionHint.className = "field-hint";
+    positionHint.style.marginBottom = "12px";
+    positionHint.textContent = "Where this text sits over the background — handy for balancing it against a custom photo.";
+    wrap.appendChild(positionHint);
+
+    const contentPosition = theme.contentPosition || {};
+    const positionRow = document.createElement("div");
+    positionRow.className = "color-grid";
+    positionRow.appendChild(
+      selectField("Horizontal", contentPosition.horizontal, POSITION_H_OPTIONS, (v) => Store.updateContentPosition({ horizontal: v }))
+    );
+    positionRow.appendChild(
+      selectField("Vertical", contentPosition.vertical, POSITION_V_OPTIONS, (v) => Store.updateContentPosition({ vertical: v }))
+    );
+    wrap.appendChild(positionRow);
 
     const hHeadline = document.createElement("h2");
     hHeadline.className = "form-section-title";

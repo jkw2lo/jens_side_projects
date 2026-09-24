@@ -21,7 +21,9 @@ in-page editor:
   file or link to one) and contact email, and appearance — site font, 7
   colors (accent/door/wall/floor/boxes/featured boxes/panel), a separate
   font+size+angle+color just for the big door title (handwriting, spray
-  paint, poster styles, etc.), and an optional custom background image.
+  paint, poster styles, etc.), where the welcome text sits (left/center/right,
+  top/center/bottom — handy for balancing it against a custom background
+  photo), and an optional custom background image.
 
 Changes autosave to that browser's local storage as you go — nothing is
 published yet, it's just visible to you, in that browser, until you publish

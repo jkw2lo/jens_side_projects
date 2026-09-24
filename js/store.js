@@ -44,6 +44,7 @@ const Store = (function () {
     });
     if (!s.siteConfig.theme.fontKey) s.siteConfig.theme.fontKey = SITE_CONFIG.theme.fontKey;
     if (!s.siteConfig.theme.headline) s.siteConfig.theme.headline = JSON.parse(JSON.stringify(SITE_CONFIG.theme.headline));
+    if (!s.siteConfig.theme.contentPosition) s.siteConfig.theme.contentPosition = JSON.parse(JSON.stringify(SITE_CONFIG.theme.contentPosition));
     return s;
   }
 
@@ -127,6 +128,11 @@ const Store = (function () {
 
     updateHeadline(patch) {
       Object.assign(state.siteConfig.theme.headline, patch);
+      persist();
+    },
+
+    updateContentPosition(patch) {
+      Object.assign(state.siteConfig.theme.contentPosition, patch);
       persist();
     },
 

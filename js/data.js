@@ -28,6 +28,12 @@ const SITE_CONFIG = {
       rotate: 0, // degrees
       color: "#24262a",
     },
+    // Where the welcome text sits over the garage background — handy for
+    // balancing it against a custom background image.
+    contentPosition: {
+      horizontal: "center", // left | center | right
+      vertical: "top", // top | center | bottom
+    },
   },
 };
 

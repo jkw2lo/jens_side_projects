@@ -89,6 +89,12 @@ function applyTheme(theme) {
   root.setProperty("--headline-color", headline.color || "#24262a");
   loadGoogleFont("headlineFontLink", hFont.googleFont);
 
+  const pos = theme.contentPosition || {};
+  const H_ALIGN = { left: "flex-start", center: "center", right: "flex-end" };
+  const V_ALIGN = { top: "flex-start", center: "center", bottom: "flex-end" };
+  root.setProperty("--welcome-align", H_ALIGN[pos.horizontal] || "center");
+  root.setProperty("--welcome-justify", V_ALIGN[pos.vertical] || "flex-start");
+
   const bgEl = document.getElementById("garageBg");
   if (bgEl) {
     if (theme.backgroundImage) {
