@@ -9,7 +9,7 @@
 <body>
 
   <!-- ============ GARAGE DOOR INTRO ============ -->
-  <div id="doorOverlay">
+  <div id="doorOverlay" tabindex="0" role="button" aria-label="Open the garage">
     <div id="garageDoor">
       <div class="door-panel"></div>
       <div class="door-panel"></div>
@@ -19,16 +19,16 @@
       <div class="door-panel"></div>
       <div class="door-handle"></div>
       <div class="door-content">
-        <h1 class="door-title" id="doorTitleText">JEN'S SIDE PROJECTS</h1>
+        <h1 class="door-title" id="doorTitle"></h1>
         <p class="door-hint">click anywhere to open</p>
       </div>
     </div>
     <div id="doorTrackShadow"></div>
   </div>
 
-  <!-- ============ GARAGE INTERIOR / APP ============ -->
+  <!-- ============ GARAGE INTERIOR ============ -->
   <div id="garageScene" aria-hidden="true">
-    <div class="garage-bg" id="garageBg">
+    <div class="garage-bg">
       <div class="garage-wall"></div>
       <div class="garage-floor"></div>
       <div class="pegboard"></div>
@@ -52,13 +52,11 @@
           <a id="mailtoLink" class="mailto-link" href="#">Send email &rarr;</a>
         </div>
       </div>
-      <button id="editModeBtn" class="pill-btn pill-btn-ghost" type="button" title="Edit this site's content">
-        <span id="editModeIcon">✎</span> <span id="editModeLabel">Edit</span>
-      </button>
+      <button id="editBtn" class="pill-btn pill-btn-ghost" type="button" title="Edit this site's content">✎ Edit</button>
     </div>
 
     <div class="main-layout">
-      <aside class="sidebar" aria-label="Project list">
+      <aside id="sidebar" class="sidebar" aria-label="Projects">
         <section class="featured-section">
           <h2 class="sidebar-heading">Featured</h2>
           <div id="featuredList" class="box-stack featured-stack"></div>
@@ -70,49 +68,14 @@
       </aside>
 
       <div class="content-area">
-        <div id="welcomeLayer" class="welcome-layer">
-          <div id="welcomeCanvas" class="welcome-canvas"></div>
-        </div>
+        <div id="welcome" class="welcome-layer"></div>
         <div id="projectOverlay" class="project-overlay"></div>
       </div>
     </div>
   </div>
 
-  <!-- Edit Mode controls float bottom-right so the canvas stays clear. -->
-  <div id="editDock" class="edit-dock hidden">
-    <div id="canvasAddBar" class="canvas-add-bar hidden">
-      <button type="button" data-add="v-guide" title="Add a vertical guide line">+ V Guide</button>
-      <button type="button" data-add="h-guide" title="Add a horizontal guide line">+ H Guide</button>
-      <button type="button" data-add="text">+ Text</button>
-      <button type="button" data-add="image">+ Image</button>
-      <button type="button" data-add="container">+ Box</button>
-    </div>
-    <div id="editToolbar" class="edit-toolbar">
-      <span class="edit-toolbar-text">
-        Edit mode — click any text to edit it in place. Changes autosave to this browser only.
-        <span id="localEditsBadge" class="local-edits-badge hidden">● unpublished local edits</span>
-      </span>
-      <div class="edit-toolbar-actions">
-        <button id="designBtn" type="button">🎨 Design</button>
-        <button id="exportBtn" type="button">Export data.js</button>
-        <button id="resetBtn" type="button" class="danger">Reset local edits</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="designPanelScrim" class="design-panel-scrim hidden"></div>
-  <div id="designPanel" class="design-panel hidden" aria-hidden="true">
-    <div class="design-panel-header">
-      <h2 id="designPanelTitle">Design</h2>
-      <button id="closeDesignPanel" type="button" class="icon-btn" aria-label="Close panel">×</button>
-    </div>
-    <div id="designPanelContent" class="design-panel-content"></div>
-  </div>
-
-  <script src="js/data.js"></script>
-  <script src="js/theme.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/store.js"></script>
+  <script src="js/content.js"></script>
   <script src="js/app.js"></script>
+  <!-- js/editor.js is only loaded when you click Edit. -->
 </body>
 </html>
