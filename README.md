@@ -1,99 +1,81 @@
 # Jen's Side Projects
 
-A single-page portfolio site: a garage door intro rolls up into a garage
-where each project is shown as a banker box in a left-hand menu. Project
-details open as a panel that overlays the welcome content — click a project
-to open it, click it again to close and return to the background. Plain
-HTML/CSS/JS — no build step, so it deploys straight to GitHub Pages.
+A single-page portfolio site. A garage door rolls up into a garage, and
+each project is a banker box in the left-hand column. Click a box to open
+the project; click it again (or press Esc, or ×) to close it.
 
-## Editing your content: Edit Mode (recommended)
+Plain HTML/CSS/JS, no build step, so it deploys straight to GitHub Pages.
 
-Click **Edit** in the top-right corner of the live site. All the edit
-controls live in a dock in the **bottom-right corner** — the "+ Text /
-+ Image / + Box" buttons above the "Edit mode" info card — so the canvas
-itself stays clear while you work:
+## Where things live
 
-- **The welcome area (when no project is selected) is a free-form canvas —
-  like a single slide.** Drag any block by its ✥ handle, resize it from its
-  corner handle, and layer blocks with "Bring to front"/"Send to back".
-  Click **+ Text**, **+ Image**, or **+ Box** in the bottom-right dock to
-  add a new block anywhere. Click a block to select it — a **Block** panel
-  opens with exact X/Y/Width/Height percentages (for precise placement, not
-  just eyeballed dragging), its own background color + opacity, and for
-  text blocks a font/size/bold/italic/align/color, all independent of the
-  other blocks. Delete a block from the same panel. Nothing here is fixed
-  chrome — the shipped heading/intro/about/nav-hint are just the starting
-  blocks, fully movable, resizable, restylable, or deletable.
-- **Alignment guides**: a faint fixed center guide (both axes) is always
-  there for quick eyeballing. Click **+ V Guide** / **+ H Guide** to drop a
-  draggable line anywhere — drag it into position, and blocks will snap to
-  it (edge or center) while you drag or resize them near it. Hover a custom
-  guide to reveal its × and remove it.
-- **Click any project text** (name, purpose, audience, features, personal
-  note) and type. A floating toolbar appears above it with a font picker
-  that previews every option in its own real typeface, a size stepper,
-  bold/italic, alignment, and a color swatch with an opacity slider — set
-  any of these to override that block, or leave it on "Default font" to
-  inherit the site font. **Reset** in the toolbar clears a block's
-  overrides back to the default.
-- Images: click **+ Add** in a project's thumbnail strip to upload, or drop
-  an image path/URL into the field below it. Reorder or remove with the
-  arrows/× on each thumbnail.
-- Features: click **+ Add feature**, type directly into the list, hover a
-  feature to reveal its × to remove it.
-- A project's link: click **Visit project** in edit mode to edit the URL in
-  a small popover instead of navigating away.
-- Add, delete, reorder, and star projects as "Featured" (max 3) from the
-  left column. Pick a different **box style** for them — Banker Box, Flat
-  Card, or Minimal — in the Design panel.
-- Site-wide settings live in the **🎨 Design** panel (top toolbar): header
-  text, resume, contact email, the default site font, 7 colors (each with
-  its own opacity slider), the project box style, the door title's own
-  font/size/angle/color, and an optional custom background image.
+```
+index.html          page skeleton
+js/content.js       ALL of the site's text, project list, and settings
+js/app.js           renders the site from content.js
+js/editor.js        Edit mode (only downloaded when you click Edit)
+css/styles.css      the look
+assets/images/      project screenshots, your photo, etc.
+assets/resume/      your resume PDF
+```
 
-Changes autosave to that browser's local storage as you go — nothing is
-published yet, it's just visible to you, in that browser, until you publish
-it:
+## Adding images and files
 
-1. Click **Export data.js** in the edit toolbar. This downloads a `data.js`
-   file with everything you've edited.
-2. Replace [`js/data.js`](js/data.js) in this repo with the downloaded file.
-3. Commit and push. GitHub Pages picks it up automatically.
-4. Optionally click **Reset local edits** afterward so this browser goes
-   back to showing the published version instead of your local draft.
+1. Drop the file into `assets/images/` (or your resume into `assets/resume/`).
+2. Refer to it **by file name only**. For example, a project's
+   `images: ["recipe-app-1.png", "recipe-app-2.png"]` or
+   `resume: "resume.pdf"`.
 
-If uploaded images (or a custom background/resume) make the exported file
-huge, drop the actual files into `assets/` instead, commit them, and point
-the relevant field at that path (e.g. `assets/images/recipe-1.png`) rather
-than an uploaded one.
+Content only stores file names, never the image data, so the site stays
+lightweight no matter how many images you add.
 
-## Editing your content directly (alternative)
+## Editing content in the browser (Edit mode)
 
-You can also hand-edit **[`js/data.js`](js/data.js)** instead of using Edit
-Mode — it defines `SITE_CONFIG`, `ABOUT_ME`, and `PROJECTS` with comments
-explaining each field. This is what Edit Mode reads as its starting point
-whenever a browser has no local edits saved. `ABOUT_ME.blocks` is the
-welcome canvas — each entry has its own `type` (`text`/`image`/`container`),
-`x`/`y`/`width`/`height` percentages, and (for text) a `style` override.
-`ABOUT_ME.guides` holds your custom alignment guides as `{ v: [...], h: [...] }`
-percentage arrays. Each project's text field formatting override (if any) lives in a sibling
-`styles` object, e.g. `project.styles.purpose` — leave a field out of
-`styles` (or leave `styles: {}`) to use the site default.
+Run the site locally (see below), then click **✎ Edit** at the top right.
+
+- **Text:** every editable piece of text has a dashed outline. Click it
+  and type. In the one-line fields (titles, taglines, features), **Enter**
+  finishes the edit. In a feature, Enter starts the next feature.
+- **Projects:** each box gets ★ (feature it, max 3), ↑ ↓ (reorder) and
+  ✕ (delete). **+ New project** is at the bottom of the list.
+- **Images:** open a project and click **+ Add image**, then pick files
+  from `assets/images/`. Reorder them with ‹ › and remove them with ×.
+  If a file you picked isn't in `assets/images/` yet, its name shows in
+  red. Copy it in before you publish.
+- **Link:** type the project URL into the box at the top right of the
+  project.
+- **About-me photo:** **+ Add photo** in the about card.
+- **⚙ Site & theme** (in the dock at the bottom right): door title, email,
+  resume file, door-title font, box style and colors.
+
+Edits autosave as a **draft in that browser only**. To publish them:
+
+1. Click **💾 Save content.js**.
+   - In Chrome or Edge you can choose `js/content.js` in your local copy
+     of this repo and overwrite it directly. Later saves go to the same file.
+   - In other browsers it downloads `content.js`. Replace `js/content.js`
+     with it.
+2. Commit and push `js/content.js` plus any new files in `assets/`.
+
+Once the published `content.js` matches your draft, the draft is cleared
+automatically. **Discard draft** throws your local edits away and returns
+to the published version.
+
+## Editing content by hand
+
+You can also open `js/content.js` and edit it directly. It's one
+`CONTENT` object (`site`, `welcome`, `projects`), with a comment
+explaining each field.
 
 ## Running it locally
-
-No build tools needed — just serve the folder, e.g.:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-then open http://localhost:8000.
+Then open http://localhost:8000.
 
 ## Deploying to GitHub Pages
 
-1. Push this repo to GitHub.
-2. In the repo settings, go to **Pages**.
-3. Under "Build and deployment", set **Source** to "Deploy from a branch",
-   pick the `main` branch and `/ (root)` folder, then save.
-4. GitHub will publish it at `https://<your-username>.github.io/<repo-name>/`.
+In the repo settings, go to **Pages**, set **Source** to "Deploy from a
+branch", and pick `main` and `/ (root)`. The site is published at
+`https://<your-username>.github.io/<repo-name>/`.
