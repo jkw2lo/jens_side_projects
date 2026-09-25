@@ -18,53 +18,53 @@ assets/images/      project screenshots, your photo, etc.
 assets/resume/      your resume PDF
 ```
 
-## Adding images and files
+## Editing the site (the builder)
 
-1. Drop the file into `assets/images/` (or your resume into `assets/resume/`).
-2. Refer to it **by file name only**. For example, a project's
-   `images: ["recipe-app-1.png", "recipe-app-2.png"]` or
-   `resume: "resume.pdf"`.
-
-Content only stores file names, never the image data, so the site stays
-lightweight no matter how many images you add.
-
-## Editing content in the browser (Edit mode)
-
-Run the site locally (see below), then click **✎ Edit** at the top right.
+Open your live site with `#edit` on the end of the address, e.g.
+`https://jkw2lo.github.io/jens_side_projects/#edit`. Visitors never see the
+Edit button; it only shows up with `#edit` (or when running locally).
 
 - **Text:** every editable piece of text has a dashed outline. Click it
   and type. In the one-line fields (titles, taglines, features), **Enter**
   finishes the edit. In a feature, Enter starts the next feature.
 - **Projects:** each box gets ★ (feature it, max 3), ↑ ↓ (reorder) and
   ✕ (delete). **+ New project** is at the bottom of the list.
-- **Images:** open a project and click **+ Add image**, then pick files
-  from `assets/images/`. Reorder them with ‹ › and remove them with ×.
-  If a file you picked isn't in `assets/images/` yet, its name shows in
-  red. Copy it in before you publish.
+- **Images:** open a project, click **+ Add image** and pick files from
+  your computer. Reorder them with ‹ › and remove them with ×. Large
+  photos are shrunk automatically when you publish.
 - **Link:** type the project URL into the box at the top right of the
   project.
 - **About-me photo:** **+ Add photo** in the about card.
 - **⚙ Site & theme** (in the dock at the bottom right): door title, email,
-  resume file, door-title font, box style and colors.
+  resume upload, door-title font, box style and colors.
 
-Edits autosave as a **draft in that browser only**. To publish them:
+When you're done, click **🚀 Publish**. It uploads any new images and your
+resume, and saves `js/content.js`, all in one commit to GitHub. The live
+site updates a minute or two later. **Undo changes** throws away everything
+since your last publish.
 
-1. Click **💾 Save content.js**.
-   - In Chrome or Edge you can choose `js/content.js` in your local copy
-     of this repo and overwrite it directly. Later saves go to the same file.
-   - In other browsers it downloads `content.js`. Replace `js/content.js`
-     with it.
-2. Commit and push `js/content.js` plus any new files in `assets/`.
+Your edits are kept in memory only, not in browser storage. If you try to
+close the tab with unpublished changes, the browser warns you first.
 
-Once the published `content.js` matches your draft, the draft is cleared
-automatically. **Discard draft** throws your local edits away and returns
-to the published version.
+### One-time setup: connect GitHub
+
+The first time you publish, the editor asks for a GitHub token:
+
+1. Go to [GitHub → new fine-grained token](https://github.com/settings/personal-access-tokens/new).
+2. **Repository access:** "Only select repositories" → this repo.
+3. **Permissions → Repository permissions → Contents:** "Read and write".
+4. Generate it and paste it into the editor.
+
+The token is kept for that browser tab only, unless you tick "Remember me
+on this device". **Disconnect** (under ⚙ Site & theme → Publishing)
+removes it.
 
 ## Editing content by hand
 
 You can also open `js/content.js` and edit it directly. It's one
-`CONTENT` object (`site`, `welcome`, `projects`), with a comment
-explaining each field.
+`CONTENT` object (`site`, `welcome`, `projects`). Images go in
+`assets/images/` and the resume in `assets/resume/`, referred to by file
+name only.
 
 ## Running it locally
 
@@ -72,7 +72,7 @@ explaining each field.
 python3 -m http.server 8000
 ```
 
-Then open http://localhost:8000.
+Then open http://localhost:8000. Edit mode and Publish work here too.
 
 ## Deploying to GitHub Pages
 

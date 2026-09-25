@@ -929,6 +929,7 @@ img.missing {
 .field-label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; }
 .field-hint { display: block; font-size: 0.72rem; color: #8a8a8c; margin-top: 3px; }
 .field input[type="text"],
+.field input[type="password"],
 .field select {
   width: 100%;
   font: inherit;
@@ -947,6 +948,28 @@ img.missing {
   padding: 0 10px;
   font-size: 0.8rem;
 }
+.field input[readonly] { background: #f7f5ee; }
+.panel-btn {
+  display: block;
+  width: 100%;
+  margin: 6px 0;
+  padding: 9px 12px;
+  border: 1px solid #cfcabb;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.panel-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--ink); }
+.panel-btn:disabled { opacity: 0.6; }
+.check-row { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; font-size: 0.82rem; }
+.connect-steps { font-size: 0.84rem; line-height: 1.5; }
+.connect-steps p { margin: 0 0 8px; }
+.connect-steps ol { margin: 0 0 16px; padding-left: 20px; }
+.connect-steps li { margin-bottom: 4px; }
+.connect-steps a { color: #1a5fb4; }
+.connect-msg { min-height: 1em; }
 .color-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

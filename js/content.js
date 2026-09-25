@@ -2,12 +2,12 @@
    ALL OF THE SITE'S CONTENT LIVES IN THIS ONE FILE.
 
    Two ways to change it:
-     1. In the browser: click "Edit" on the site, click any text to change
-        it, then "Save content.js" and put the file here (see README).
+     1. In the browser: open the site with #edit on the end of the address,
+        click any text to change it, then click Publish (see README).
      2. By hand: edit the values below.
 
-   Images and files: drop them into the assets folder, then refer to them
-   here by file name only —
+   Images and files live in the assets folder and are referred to here by
+   file name only —
      images  -> assets/images/   e.g. "recipe-app-1.png"
      resume  -> assets/resume/   e.g. "resume.pdf"
    (A full path like "assets/other/x.png" or a URL works too.)

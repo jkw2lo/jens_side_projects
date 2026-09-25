@@ -6,9 +6,6 @@
 const App = (function () {
   "use strict";
 
-  const DRAFT_KEY = "jsp2_draft";
-  const EDIT_KEY = "jsp2_editing";
-
   const DOOR_FONTS = {
     bebas: { label: "Bebas Neue — poster", stack: '"Bebas Neue", sans-serif', google: "Bebas+Neue" },
     anton: { label: "Anton — heavy poster", stack: '"Anton", sans-serif', google: "Anton" },
@@ -24,50 +21,22 @@ const App = (function () {
   const editor = () => (typeof Editor === "undefined" ? null : Editor);
   const clone = (o) => JSON.parse(JSON.stringify(o));
 
-  /* ---------------- data + local draft ---------------- */
-  // A draft only exists in the browser where Edit mode was used. Once the
-  // saved content.js is published, the draft matches it and is dropped.
-  function loadData() {
-    let draft = null;
-    try {
-      draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
-    } catch (err) {
-      draft = null;
-    }
-    if (draft && JSON.stringify(draft) === JSON.stringify(CONTENT)) {
-      clearDraft();
-      draft = null;
-    }
-    return draft || clone(CONTENT);
-  }
+  /* ---------------- data ---------------- */
+  // Edits live in memory only (nothing is written to browser storage).
+  // "Publish" in Edit mode commits them straight to GitHub.
+  let data = clone(CONTENT);
+  let dirty = false;
 
-  let data = loadData();
-  let hasDraft = JSON.stringify(data) !== JSON.stringify(CONTENT);
-  let saveTimer = null;
-
-  function saveDraftNow() {
-    clearTimeout(saveTimer);
-    saveTimer = null;
-    try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
-    } catch (err) {
-      /* storage unavailable — edits still live until the tab closes */
-    }
-    hasDraft = true;
+  function markChanged() {
+    dirty = true;
     if (editor()) editor().updateStatus();
   }
-  // Debounced so typing doesn't serialize everything on every keystroke.
-  function saveDraft() {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveDraftNow, 400);
-  }
-  function clearDraft() {
-    try {
-      localStorage.removeItem(DRAFT_KEY);
-    } catch (err) {
-      /* ignore */
-    }
-  }
+
+  window.addEventListener("beforeunload", (e) => {
+    if (!dirty) return;
+    e.preventDefault();
+    e.returnValue = "";
+  });
 
   // Set a value by dotted path, e.g. "projects.2.purpose".
   function set(path, value) {
@@ -75,12 +44,12 @@ const App = (function () {
     let obj = data;
     for (let i = 0; i < keys.length - 1; i++) obj = obj[keys[i]];
     obj[keys[keys.length - 1]] = value;
-    saveDraft();
+    markChanged();
   }
 
   /* ---------------- asset paths ---------------- */
-  // Session-only previews for images picked in Edit mode (file name ->
-  // object URL), so a new image shows before it's copied into assets/.
+  // Previews for files picked in Edit mode (file name -> object URL), so a
+  // new image shows right away, before it has been published.
   const previews = new Map();
 
   function assetUrl(name, folder) {
@@ -245,7 +214,7 @@ const App = (function () {
   function markMissing(img, name) {
     img.addEventListener("error", () => {
       img.classList.add("missing");
-      img.title = state.editing ? "Can't find " + name + " — is it in assets/images/?" : "";
+      img.title = state.editing ? "Can't load " + name + " yet — if you just published it, the live site takes a minute to update." : "";
     });
   }
 
@@ -474,11 +443,6 @@ const App = (function () {
       document.body.classList.toggle("editing", on);
       $("editBtn").classList.toggle("active", on);
       $("editBtn").textContent = on ? "✓ Done" : "✎ Edit";
-      try {
-        localStorage.setItem(EDIT_KEY, on ? "1" : "");
-      } catch (err) {
-        /* ignore */
-      }
       if (editor()) editor().setOpen(on);
       render();
     };
@@ -487,14 +451,23 @@ const App = (function () {
   }
   $("editBtn").addEventListener("click", () => setEditing(!state.editing));
 
-  render();
-  let resumeEditing = false;
-  try {
-    resumeEditing = localStorage.getItem(EDIT_KEY) === "1";
-  } catch (err) {
-    /* ignore */
+  // Visitors don't see the Edit button. Open the site with #edit on the end
+  // of the address (or run it locally) to get it.
+  const LOCAL = /^(localhost|127\.0\.0\.1|)$/.test(location.hostname);
+  function showEditButton() {
+    const wanted = LOCAL || location.hash === "#edit";
+    $("editBtn").classList.toggle("hidden", !wanted && !state.editing);
+    return location.hash === "#edit";
   }
-  if (resumeEditing) {
+  window.addEventListener("hashchange", () => {
+    if (showEditButton() && !state.editing) {
+      openDoor();
+      setEditing(true);
+    }
+  });
+
+  render();
+  if (showEditButton()) {
     openDoor();
     setEditing(true);
   } else {
@@ -513,18 +486,13 @@ const App = (function () {
     BOX_STYLES,
     previews,
     set,
-    saveDraft,
-    saveDraftNow,
-    clearDraft,
-    hasDraft: () => hasDraft,
-    resetDraft() {
-      clearDraft();
-      data = clone(CONTENT);
-      hasDraft = false;
+    markChanged,
+    isDirty: () => dirty,
+    // Replace everything (after loading or publishing); clears "unpublished".
+    reset(next) {
+      data = clone(next);
+      dirty = false;
       render();
-    },
-    markSaved() {
-      hasDraft = false;
     },
     projectIndex,
     featured,
